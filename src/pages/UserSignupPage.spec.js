@@ -1,9 +1,6 @@
 import React from 'react';
-import { render, cleanup, fireEvent, waitForDomChange, waitForElement } from '@testing-library/react';
-import '@testing-library/jest-dom/extend-expect';
+import { render, fireEvent, waitForDomChange, waitForElement } from '@testing-library/react';
 import { UserSignupPage } from './UserSignupPage';
-
-beforeEach(cleanup);
 
 describe('UserSignupPage', () => {
   describe('Layout', () => {
@@ -220,14 +217,14 @@ describe('UserSignupPage', () => {
             }
           }
         })
-      }
+      };
       const { queryByText } = setupForSubmit({ actions });
       fireEvent.click(button);
 
       const errorMessage = await waitForElement(() => queryByText('Cannot be null'));
       expect(errorMessage).toBeInTheDocument();
 
-    })
+    });
   });
 });
 
