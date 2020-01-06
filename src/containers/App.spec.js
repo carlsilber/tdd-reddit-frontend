@@ -3,8 +3,6 @@ import { render, fireEvent, waitForElement } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import App from './App';
 import { Provider } from 'react-redux';
-import { createStore } from 'redux';
-import authReducer from '../redux/authReducer';
 import axios from 'axios';
 import configureStore from '../redux/configureStore';
 
