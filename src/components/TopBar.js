@@ -13,6 +13,10 @@ class TopBar extends React.Component {
     document.addEventListener('click', this.onClickTracker);
   }
 
+  componentWillUnmount() {
+    document.removeEventListener('click', this.onClickTracker);
+  }
+
   onClickTracker = (event) => {
     if (this.actionArea && !this.actionArea.contains(event.target)) {
       this.setState({
