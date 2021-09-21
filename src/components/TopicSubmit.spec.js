@@ -271,5 +271,92 @@ describe('TopicSubmit', () => {
         fireEvent.focus(textArea);
         expect(queryByText('Post')).not.toBeDisabled();
       });
+      it('displays validation error for content', async () => {
+        const { container, queryByText } = setup();
+        const textArea = container.querySelector('textarea');
+        fireEvent.focus(textArea);
+        fireEvent.change(textArea, { target: { value: 'Test topic content' } });
+  
+        const topicButton = queryByText('Post');
+  
+        const mockFunction = jest.fn().mockRejectedValueOnce({
+          response: {
+            data: {
+              validationErrors: {
+                content: 'It must have minimum 10 and maximum 5000 characters'
+              }
+            }
+          }
+        });
+  
+        apiCalls.postTopic = mockFunction;
+        fireEvent.click(topicButton);
+  
+        await waitForDomChange();
+  
+        expect(
+          queryByText('It must have minimum 10 and maximum 5000 characters')
+        ).toBeInTheDocument();
+      });
+      it('clears validation error after clicking cancel', async () => {
+        const { container, queryByText } = setup();
+        const textArea = container.querySelector('textarea');
+        fireEvent.focus(textArea);
+        fireEvent.change(textArea, { target: { value: 'Test topic content' } });
+  
+        const topicButton = queryByText('Post');
+  
+        const mockFunction = jest.fn().mockRejectedValueOnce({
+          response: {
+            data: {
+              validationErrors: {
+                content: 'It must have minimum 10 and maximum 5000 characters'
+              }
+            }
+          }
+        });
+  
+        apiCalls.postTopic = mockFunction;
+        fireEvent.click(topicButton);
+  
+        await waitForDomChange();
+        fireEvent.click(queryByText('Cancel'));
+  
+        expect(
+          queryByText('It must have minimum 10 and maximum 5000 characters')
+        ).not.toBeInTheDocument();
+      });
+      it('clears validation error after content is changed', async () => {
+        const { container, queryByText } = setup();
+        const textArea = container.querySelector('textarea');
+        fireEvent.focus(textArea);
+        fireEvent.change(textArea, { target: { value: 'Test topic content' } });
+  
+        const topicButton = queryByText('Post');
+  
+        const mockFunction = jest.fn().mockRejectedValueOnce({
+          response: {
+            data: {
+              validationErrors: {
+                content: 'It must have minimum 10 and maximum 5000 characters'
+              }
+            }
+          }
+        });
+  
+        apiCalls.postTopic = mockFunction;
+        fireEvent.click(topicButton);
+  
+        await waitForDomChange();
+        fireEvent.change(textArea, {
+          target: { value: 'Test topic content updated' }
+        });
+  
+        expect(
+          queryByText('It must have minimum 10 and maximum 5000 characters')
+        ).not.toBeInTheDocument();
+      });
   });
 });
+
+console.error = () => {};
