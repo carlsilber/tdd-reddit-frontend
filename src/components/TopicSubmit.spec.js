@@ -1,9 +1,10 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, waitForDomChange } from '@testing-library/react';
 import TopicSubmit from './TopicSubmit';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import authReducer from '../redux/authReducer';
+import * as apiCalls from '../api/apiCalls';
 
 const defaultState = {
   id: 1,
@@ -87,5 +88,58 @@ describe('TopicSubmit', () => {
       fireEvent.click(cancelButton);
       expect(queryByText('Cancel')).not.toBeInTheDocument();
     });
+    it('calls postTopic with topic request object when clicking Post', () => {
+        const { container, queryByText } = setup();
+        const textArea = container.querySelector('textarea');
+        fireEvent.focus(textArea);
+        fireEvent.change(textArea, { target: { value: 'Test topic content' } });
+  
+        const topicButton = queryByText('Post');
+  
+        apiCalls.postTopic = jest.fn().mockResolvedValue({});
+        fireEvent.click(topicButton);
+  
+        expect(apiCalls.postTopic).toHaveBeenCalledWith({
+          content: 'Test topic content'
+        });
+      });
+      it('returns back to unfocused state after successful postTopic action', async () => {
+        const { container, queryByText } = setup();
+        const textArea = container.querySelector('textarea');
+        fireEvent.focus(textArea);
+        fireEvent.change(textArea, { target: { value: 'Test topic content' } });
+  
+        const topicButton = queryByText('Post');
+  
+        apiCalls.postTopic = jest.fn().mockResolvedValue({});
+        fireEvent.click(topicButton);
+  
+        await waitForDomChange();
+        expect(queryByText('Post')).not.toBeInTheDocument();
+      });
+      it('clear content after successful postTopic action', async () => {
+        const { container, queryByText } = setup();
+        const textArea = container.querySelector('textarea');
+        fireEvent.focus(textArea);
+        fireEvent.change(textArea, { target: { value: 'Test topic content' } });
+  
+        const topicButton = queryByText('Post');
+  
+        apiCalls.postTopic = jest.fn().mockResolvedValue({});
+        fireEvent.click(topicButton);
+  
+        await waitForDomChange();
+        expect(queryByText('Test topic content')).not.toBeInTheDocument();
+      });
+      it('clear content after successful postTopic action', () => {
+        const { container, queryByText } = setup();
+        const textArea = container.querySelector('textarea');
+        fireEvent.focus(textArea);
+        fireEvent.change(textArea, { target: { value: 'Test topic content' } });
+  
+        fireEvent.click(queryByText('Cancel'));
+  
+        expect(queryByText('Test topic content')).not.toBeInTheDocument();
+      });
   });
 });

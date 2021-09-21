@@ -1,10 +1,29 @@
 import React, { Component } from 'react';
 import ProfileImageWithDefault from './ProfileImageWithDefault';
 import { connect } from "react-redux";
+import * as apiCalls from '../api/apiCalls';
 
 class TopicSubmit extends Component {
     state = {
-        focused: false
+        focused: false,
+        content: undefined
+      };
+    
+      onChangeContent = (event) => {
+        const value = event.target.value;
+        this.setState({ content: value });
+      };
+    
+      onClickPost = () => {
+        const body = {
+          content: this.state.content
+        };
+        apiCalls.postTopic(body).then((response) => {
+          this.setState({
+            focused: false,
+            content: ''
+          });
+        });
       };
     
       onFocus = () => {
@@ -15,7 +34,8 @@ class TopicSubmit extends Component {
     
       onClickCancel = () => {
         this.setState({
-          focused: false
+            focused: false,
+            content: ''
         });
       };
     
@@ -33,10 +53,14 @@ class TopicSubmit extends Component {
             className="form-control w-100"
             rows={this.state.focused ? 3 : 1}
             onFocus={this.onFocus}
+            value={this.state.content}
+            onChange={this.onChangeContent}
           />
           {this.state.focused && (
             <div className="text-right mt-1">
-              <button className="btn btn-success">Post</button>
+            <button className="btn btn-success" onClick={this.onClickPost}>
+                Post
+              </button>
               <button
                 className="btn btn-light ml-1"
                 onClick={this.onClickCancel}
