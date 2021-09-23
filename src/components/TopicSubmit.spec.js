@@ -38,7 +38,7 @@ describe('TopicSubmit', () => {
       const image = container.querySelector('img');
       expect(image).toBeInTheDocument();
     });
-    it('has textarea', () => {
+    it('displays textarea 1 line', () => {
         const { container } = setup();
       const textArea = container.querySelector('textarea');
       expect(textArea.rows).toBe(1);
@@ -131,7 +131,7 @@ describe('TopicSubmit', () => {
         await waitForDomChange();
         expect(queryByText('Test topic content')).not.toBeInTheDocument();
       });
-      it('clear content after successful postTopic action', () => {
+      it('clears content after clicking cancel', () => {
         const { container, queryByText } = setup();
         const textArea = container.querySelector('textarea');
         fireEvent.focus(textArea);

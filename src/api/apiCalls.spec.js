@@ -73,4 +73,22 @@ describe('apiCalls', () => {
       expect(path).toBe('/api/1.0/topics');
     });
   });
+  describe('loadTopics', () => {
+    it('calls /api/1.0/topics?page=0&size=5&sort=id,desc when no param provided', () => {
+      const mockGetTopics = jest.fn();
+      axios.get = mockGetTopics;
+      apiCalls.loadTopics();
+      expect(mockGetTopics).toBeCalledWith(
+        '/api/1.0/topics?page=0&size=5&sort=id,desc'
+      );
+    });
+    it('calls /api/1.0/users/user1/topics?page=0&size=5&sort=id,desc when user param provided', () => {
+      const mockGetTopics = jest.fn();
+      axios.get = mockGetTopics;
+      apiCalls.loadTopics('user1');
+      expect(mockGetTopics).toBeCalledWith(
+        '/api/1.0/users/user1/topics?page=0&size=5&sort=id,desc'
+      );
+    });
+  });
 });

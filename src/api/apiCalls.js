@@ -34,3 +34,11 @@ export const updateUser = (userId, body) => {
 export const postTopic = (topic) => {
   return axios.post('/api/1.0/topics', topic);
 };
+
+
+export const loadTopics = (username) => {
+  const basePath = username
+    ? `/api/1.0/users/${username}/topics`
+    : '/api/1.0/topics';
+  return axios.get(basePath + '?page=0&size=5&sort=id,desc');
+};

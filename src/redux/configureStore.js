@@ -1,8 +1,10 @@
-import { createStore, applyMiddleware } from 'redux';
+import { createStore, applyMiddleware, compose } from 'redux';
 import authReducer from './authReducer';
 import logger from 'redux-logger';
 import thunk from 'redux-thunk';
 import * as apiCalls from '../api/apiCalls';
+
+const composeEnhancer = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
 const configureStore = (addLogger = true) => {
   let localStorageData = localStorage.getItem('redd-auth');
@@ -25,14 +27,14 @@ const configureStore = (addLogger = true) => {
   const middleware = addLogger
     ? applyMiddleware(thunk, logger)
     : applyMiddleware(thunk);
-    const store = createStore(authReducer, persistedState, middleware);
+    const store = createStore(authReducer, persistedState, composeEnhancer(middleware));
 
     store.subscribe(() => {
       localStorage.setItem('redd-auth', JSON.stringify(store.getState()));
       apiCalls.setAuthorizationHeader(store.getState());
     });
-  
-    return store;
+
+    return store;   
 };
 
 export default configureStore;
