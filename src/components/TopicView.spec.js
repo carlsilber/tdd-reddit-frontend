@@ -1,6 +1,7 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import TopicView from './TopicView';
+import { MemoryRouter } from 'react-router-dom';
 
 const setup = () => {
   const oneMinute = 60 * 1000;
@@ -17,7 +18,11 @@ const setup = () => {
       image: 'profile1.png'
     }
   };
-  return render(<TopicView topic={topic} />);
+  return render(
+    <MemoryRouter>
+      <TopicView topic={topic} />
+    </MemoryRouter>
+  );
 };
 
 describe('TopicView', () => {
@@ -39,5 +44,10 @@ describe('TopicView', () => {
       const { queryByText } = setup();
       expect(queryByText('1 minute ago')).toBeInTheDocument();
     });
+    it('has link to user page', () => {
+        const { container } = setup();
+        const anchor = container.querySelector('a');
+        expect(anchor.getAttribute('href')).toBe('/user1');
+      });
   });
 });

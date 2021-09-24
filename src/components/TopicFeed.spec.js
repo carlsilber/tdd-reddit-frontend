@@ -2,9 +2,14 @@ import React from 'react';
 import { render, waitForDomChange, waitForElement } from '@testing-library/react';
 import TopicFeed from './TopicFeed';
 import * as apiCalls from '../api/apiCalls';
+import { MemoryRouter } from 'react-router-dom';
 
 const setup = (props) => {
-  return render(<TopicFeed {...props} />);
+  return render(
+    <MemoryRouter>
+      <TopicFeed {...props} />
+    </MemoryRouter>
+  );
 };
 
 const mockEmptyResponse = {
