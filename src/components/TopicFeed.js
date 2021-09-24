@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import * as apiCalls from '../api/apiCalls';
 import Spinner from './Spinner';
+import TopicView from './TopicView';
 
 class TopicFeed extends Component {
     state = {
@@ -29,7 +30,7 @@ componentDidMount() {
         return (
             <div>
             {this.state.page.content.map((topic) => {
-              return <span key={topic.id}>{topic.content}</span>;
+              return <TopicView key={topic.id} topic={topic}/>;
             })}
           </div>
         );
