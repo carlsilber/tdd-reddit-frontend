@@ -32,6 +32,9 @@ componentDidMount() {
             {this.state.page.content.map((topic) => {
               return <TopicView key={topic.id} topic={topic}/>;
             })}
+            {this.state.page.last === false && (
+              <div className="card card-header text-center">Load More</div>
+            )}
           </div>
         );
     }

@@ -41,6 +41,29 @@ const mockSuccessGetTopicsSinglePage = {
   }
 };
 
+const mockSuccessGetTopicsFirstOfMultiPage = {
+  data: {
+    content: [
+      {
+        id: 10,
+        content: 'This is the latest topic',
+        date: 1561294668539,
+        user: {
+          id: 1,
+          username: 'user1',
+          displayName: 'display1',
+          image: 'profile1.png'
+        }
+      }
+    ],
+    number: 0,
+    first: true,
+    last: false,
+    size: 5,
+    totalPages: 2
+  }
+};
+
 describe('TopicFeed', () => {
   describe('Lifecycle', () => {
     it('calls loadTopics when it is rendered', () => {
@@ -97,6 +120,14 @@ describe('TopicFeed', () => {
         queryByText('This is the latest topic')
       );
       expect(topicContent).toBeInTheDocument();
+    });
+    it('displays Load More when there are next pages', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      const { queryByText } = setup();
+      const loadMore = await waitForElement(() => queryByText('Load More'));
+      expect(loadMore).toBeInTheDocument();
     });
   });
 });
