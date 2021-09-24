@@ -6,6 +6,14 @@ import { Provider } from 'react-redux';
 import configureStore from '../redux/configureStore';
 import axios from 'axios';
 
+apiCalls.loadTopics = jest.fn().mockResolvedValue({
+  data: {
+    content: [],
+    number: 0,
+    size: 3
+  }
+});
+
 const mockSuccessGetUser = {
   data: {
     id: 1,
