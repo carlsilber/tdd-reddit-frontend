@@ -91,4 +91,58 @@ describe('apiCalls', () => {
       );
     });
   });
+  describe('loadOldTopics', () => {
+    it('calls /api/1.0/topics/5?direction=before&page=0&size=5&sort=id,desc when topic id param provided', () => {
+      const mockGetTopics = jest.fn();
+      axios.get = mockGetTopics;
+      apiCalls.loadOldTopics(5);
+      expect(mockGetTopics).toBeCalledWith(
+        '/api/1.0/topics/5?direction=before&page=0&size=5&sort=id,desc'
+      );
+    });
+    it('calls /api/1.0/users/user3/topics/5?direction=before&page=0&size=5&sort=id,desc when topic id and username param provided', () => {
+      const mockGetTopics = jest.fn();
+      axios.get = mockGetTopics;
+      apiCalls.loadOldTopics(5, 'user3');
+      expect(mockGetTopics).toBeCalledWith(
+        '/api/1.0/users/user3/topics/5?direction=before&page=0&size=5&sort=id,desc'
+      );
+    });
+  });
+  describe('loadNewTopics', () => {
+    it('calls /api/1.0/topics/5?direction=after&sort=id,desc when topic id param provided', () => {
+      const mockGetTopics = jest.fn();
+      axios.get = mockGetTopics;
+      apiCalls.loadNewTopics(5);
+      expect(mockGetTopics).toBeCalledWith(
+        '/api/1.0/topics/5?direction=after&sort=id,desc'
+      );
+    });
+    it('calls /api/1.0/users/user3/topics/5?direction=after&sort=id,desc when topic id and username param provided', () => {
+      const mockGetTopics = jest.fn();
+      axios.get = mockGetTopics;
+      apiCalls.loadNewTopics(5, 'user3');
+      expect(mockGetTopics).toBeCalledWith(
+        '/api/1.0/users/user3/topics/5?direction=after&sort=id,desc'
+      );
+    });
+  });
+  describe('loadNewTopicCount', () => {
+    it('calls /api/1.0/topics/5?direction=after&count=true when topic id param provided', () => {
+      const mockGetTopics = jest.fn();
+      axios.get = mockGetTopics;
+      apiCalls.loadNewTopicCount(5);
+      expect(mockGetTopics).toBeCalledWith(
+        '/api/1.0/topics/5?direction=after&count=true'
+      );
+    });
+    it('calls /api/1.0/users/user3/topics/5?direction=after&count=true when topic id and username param provided', () => {
+      const mockGetTopics = jest.fn();
+      axios.get = mockGetTopics;
+      apiCalls.loadNewTopicCount(5, 'user3');
+      expect(mockGetTopics).toBeCalledWith(
+        '/api/1.0/users/user3/topics/5?direction=after&count=true'
+      );
+    });
+  });
 });

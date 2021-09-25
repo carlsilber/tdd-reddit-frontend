@@ -35,10 +35,33 @@ export const postTopic = (topic) => {
   return axios.post('/api/1.0/topics', topic);
 };
 
-
 export const loadTopics = (username) => {
   const basePath = username
     ? `/api/1.0/users/${username}/topics`
     : '/api/1.0/topics';
   return axios.get(basePath + '?page=0&size=5&sort=id,desc');
+};
+
+export const loadOldTopics = (topicId, username) => {
+  const basePath = username
+    ? `/api/1.0/users/${username}/topics`
+    : '/api/1.0/topics';
+  const path = `${basePath}/${topicId}?direction=before&page=0&size=5&sort=id,desc`;
+  return axios.get(path);
+};
+
+export const loadNewTopics = (topicId, username) => {
+  const basePath = username
+    ? `/api/1.0/users/${username}/topics`
+    : '/api/1.0/topics';
+  const path = `${basePath}/${topicId}?direction=after&sort=id,desc`;
+  return axios.get(path);
+};
+
+export const loadNewTopicCount = (topicId, username) => {
+  const basePath = username
+    ? `/api/1.0/users/${username}/topics`
+    : '/api/1.0/topics';
+  const path = `${basePath}/${topicId}?direction=after&count=true`;
+  return axios.get(path);
 };
