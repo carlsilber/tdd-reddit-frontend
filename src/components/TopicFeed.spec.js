@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, waitForDomChange, waitForElement } from '@testing-library/react';
+import { render, waitForDomChange, waitForElement, fireEvent } from '@testing-library/react';
 import TopicFeed from './TopicFeed';
 import * as apiCalls from '../api/apiCalls';
 import { MemoryRouter } from 'react-router-dom';
@@ -54,11 +54,45 @@ const mockSuccessGetTopicsFirstOfMultiPage = {
           displayName: 'display1',
           image: 'profile1.png'
         }
+      },
+      {
+        id: 9,
+        content: 'This is topic 9',
+        date: 1561294668539,
+        user: {
+          id: 1,
+          username: 'user1',
+          displayName: 'display1',
+          image: 'profile1.png'
+        }
       }
     ],
     number: 0,
     first: true,
     last: false,
+    size: 5,
+    totalPages: 2
+  }
+};
+
+const mockSuccessGetTopicsLastOfMultiPage = {
+  data: {
+    content: [
+      {
+        id: 1,
+        content: 'This is the oldest topic',
+        date: 1561294668539,
+        user: {
+          id: 1,
+          username: 'user1',
+          displayName: 'display1',
+          image: 'profile1.png'
+        }
+      }
+    ],
+    number: 0,
+    first: true,
+    last: true,
     size: 5,
     totalPages: 2
   }
@@ -130,4 +164,61 @@ describe('TopicFeed', () => {
       expect(loadMore).toBeInTheDocument();
     });
   });
+  describe('Interactions', () => {
+    it('calls loadOldTopics with topic id when clicking Load More', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadOldTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsLastOfMultiPage);
+      const { queryByText } = setup();
+      const loadMore = await waitForElement(() => queryByText('Load More'));
+      fireEvent.click(loadMore);
+      const firstParam = apiCalls.loadOldTopics.mock.calls[0][0];
+      expect(firstParam).toBe(9);
+    });
+    it('calls loadOldTopics with topic id and username when clicking Load More when rendered with user property', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadOldTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsLastOfMultiPage);
+      const { queryByText } = setup({ user: 'user1' });
+      const loadMore = await waitForElement(() => queryByText('Load More'));
+      fireEvent.click(loadMore);
+      expect(apiCalls.loadOldTopics).toHaveBeenCalledWith(9, 'user1');
+    });
+    it('displays loaded old topic when loadOldTopics api call success', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadOldTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsLastOfMultiPage);
+      const { queryByText } = setup();
+      const loadMore = await waitForElement(() => queryByText('Load More'));
+      fireEvent.click(loadMore);
+      const oldTopic = await waitForElement(() =>
+        queryByText('This is the oldest topic')
+      );
+      expect(oldTopic).toBeInTheDocument();
+    });
+    it('hides Load More when loadOldTopics api call returns last page', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadOldTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsLastOfMultiPage);
+      const { queryByText } = setup();
+      const loadMore = await waitForElement(() => queryByText('Load More'));
+      fireEvent.click(loadMore);
+      await waitForElement(() => queryByText('This is the oldest topic'));
+      expect(queryByText('Load More')).not.toBeInTheDocument();
+    });
+  });
 });
+
+console.error = () => {};
