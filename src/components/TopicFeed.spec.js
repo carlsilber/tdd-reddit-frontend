@@ -4,6 +4,29 @@ import TopicFeed from './TopicFeed';
 import * as apiCalls from '../api/apiCalls';
 import { MemoryRouter } from 'react-router-dom';
 
+const originalSetInterval = window.setInterval;
+const originalClearInterval = window.clearInterval;
+
+let timedFunction;
+
+const useFakeIntervals = () => {
+  window.setInterval = (callback, interval) => {
+    timedFunction = callback;
+  };
+  window.clearInterval = () => {
+    timedFunction = undefined;
+  };
+};
+
+const useRealIntervals = () => {
+  window.setInterval = originalSetInterval;
+  window.clearInterval = originalClearInterval;
+};
+
+const runTimer = () => {
+  timedFunction && timedFunction();
+};
+
 const setup = (props) => {
   return render(
     <MemoryRouter>
@@ -117,6 +140,7 @@ describe('TopicFeed', () => {
       expect(parameter).toBeUndefined();
     });
     it('calls loadNewTopicCount with topTopic id', async () => {
+      useFakeIntervals();
       apiCalls.loadTopics = jest
         .fn()
         .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
@@ -124,11 +148,15 @@ describe('TopicFeed', () => {
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
       const { queryByText } = setup();
+      await waitForDomChange();
+      runTimer();
       await waitForElement(() => queryByText('There is 1 new topic'));
       const firstParam = apiCalls.loadNewTopicCount.mock.calls[0][0];
       expect(firstParam).toBe(10);
+      useRealIntervals();
     });
     it('calls loadNewTopicCount with topTopic id and username when rendered with user property', async () => {
+      useFakeIntervals();
       apiCalls.loadTopics = jest
         .fn()
         .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
@@ -136,10 +164,14 @@ describe('TopicFeed', () => {
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
       const { queryByText } = setup({ user: 'user1' });
+      await waitForDomChange();
+      runTimer();
       await waitForElement(() => queryByText('There is 1 new topic'));
       expect(apiCalls.loadNewTopicCount).toHaveBeenCalledWith(10, 'user1');
+      useRealIntervals();
     });
     it('displays new topic count as 1 after loadNewTopicCount success', async () => {
+      useFakeIntervals();
       apiCalls.loadTopics = jest
         .fn()
         .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
@@ -147,12 +179,16 @@ describe('TopicFeed', () => {
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
       const { queryByText } = setup({ user: 'user1' });
+      await waitForDomChange();
+      runTimer();
       const newTopicCount = await waitForElement(() =>
         queryByText('There is 1 new topic')
       );
       expect(newTopicCount).toBeInTheDocument();
+      useRealIntervals();
     });
     it('displays new topic count constantly', async () => {
+      useFakeIntervals();
       apiCalls.loadTopics = jest
         .fn()
         .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
@@ -160,16 +196,21 @@ describe('TopicFeed', () => {
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
       const { queryByText } = setup({ user: 'user1' });
+      await waitForDomChange();
+      runTimer();
       await waitForElement(() => queryByText('There is 1 new topic'));
       apiCalls.loadNewTopicCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 2 } });
+        runTimer();
       const newTopicCount = await waitForElement(() =>
         queryByText('There are 2 new topics')
       );
       expect(newTopicCount).toBeInTheDocument();
-    }, 7000);
-    it('does not call loadNewTopicCount after component is unmounted', async (done) => {
+      useRealIntervals();
+    });
+    it('does not call loadNewTopicCount after component is unmounted', async () => {
+      useFakeIntervals();
       apiCalls.loadTopics = jest
         .fn()
         .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
@@ -177,23 +218,27 @@ describe('TopicFeed', () => {
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
       const { queryByText, unmount } = setup({ user: 'user1' });
+      await waitForDomChange();
+      runTimer();
       await waitForElement(() => queryByText('There is 1 new topic'));
       unmount();
-      setTimeout(() => {
-        expect(apiCalls.loadNewTopicCount).toHaveBeenCalledTimes(1);
-        done();
-      }, 3500);
-    }, 7000);
+      expect(apiCalls.loadNewTopicCount).toHaveBeenCalledTimes(1);
+      useRealIntervals();
+    });
     it('displays new topic count as 1 after loadNewTopicCount success when user does not have topics initially', async () => {
+      useFakeIntervals();
       apiCalls.loadTopics = jest.fn().mockResolvedValue(mockEmptyResponse);
       apiCalls.loadNewTopicCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
       const { queryByText } = setup({ user: 'user1' });
+      await waitForDomChange();
+      runTimer();
       const newTopicCount = await waitForElement(() =>
         queryByText('There is 1 new topic')
       );
       expect(newTopicCount).toBeInTheDocument();
+      useRealIntervals();
     });
   });
   describe('Layout', () => {
