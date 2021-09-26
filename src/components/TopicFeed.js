@@ -8,15 +8,34 @@ class TopicFeed extends Component {
         page: {
           content: []
         },
-        isLoadingTopics: false
+        isLoadingTopics: false, 
+        newTopicCount: 0
       };
     
 componentDidMount() {
     this.setState({ isLoadingTopics: true });
     apiCalls.loadTopics(this.props.user).then((response) => {
-      this.setState({ page: response.data, isLoadingTopics: false });
+      this.setState({ page: response.data, isLoadingTopics: false }, () => {
+        this.counter = setInterval(this.checkCount, 3000);
+      });
     });
+  }
+
+componentWillUnmount() {
+  clearInterval(this.counter);
 }
+
+checkCount = () => {
+  const topics = this.state.page.content;
+  let topTopicId = 0;
+  if (topics.length > 0) {
+    topTopicId = topics[0].id;
+  }
+  apiCalls.loadNewTopicCount(topTopicId, this.props.user).then((response) => {
+    this.setState({ newTopicCount: response.data.count });
+  });
+};
+
 
 onClickLoadMore = () => {
   const topics = this.state.page.content;
@@ -38,7 +57,7 @@ onClickLoadMore = () => {
         if (this.state.isLoadingTopics) {
             return <Spinner />;
           }
-          if (this.state.page.content.length === 0) {
+          if (this.state.page.content.length === 0 && this.state.newTopicCount === 0) {
             return (
               <div className="card card-header text-center">There are no topics</div>
             );
@@ -46,6 +65,11 @@ onClickLoadMore = () => {
       
         return (
             <div>
+                {this.state.newTopicCount > 0 && (
+                  <div className="card card-header text-center">
+                {this.state.newTopicCount === 1 ? 'There is 1 new topic' : `There are ${this.state.newTopicCount} new topics`}
+          </div>
+        )}
             {this.state.page.content.map((topic) => {
               return <TopicView key={topic.id} topic={topic}/>;
             })}

@@ -116,6 +116,85 @@ describe('TopicFeed', () => {
       const parameter = apiCalls.loadTopics.mock.calls[0][0];
       expect(parameter).toBeUndefined();
     });
+    it('calls loadNewTopicCount with topTopic id', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      const { queryByText } = setup();
+      await waitForElement(() => queryByText('There is 1 new topic'));
+      const firstParam = apiCalls.loadNewTopicCount.mock.calls[0][0];
+      expect(firstParam).toBe(10);
+    });
+    it('calls loadNewTopicCount with topTopic id and username when rendered with user property', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      const { queryByText } = setup({ user: 'user1' });
+      await waitForElement(() => queryByText('There is 1 new topic'));
+      expect(apiCalls.loadNewTopicCount).toHaveBeenCalledWith(10, 'user1');
+    });
+    it('displays new topic count as 1 after loadNewTopicCount success', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      const { queryByText } = setup({ user: 'user1' });
+      const newTopicCount = await waitForElement(() =>
+        queryByText('There is 1 new topic')
+      );
+      expect(newTopicCount).toBeInTheDocument();
+    });
+    it('displays new topic count constantly', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      const { queryByText } = setup({ user: 'user1' });
+      await waitForElement(() => queryByText('There is 1 new topic'));
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 2 } });
+      const newTopicCount = await waitForElement(() =>
+        queryByText('There are 2 new topics')
+      );
+      expect(newTopicCount).toBeInTheDocument();
+    }, 7000);
+    it('does not call loadNewTopicCount after component is unmounted', async (done) => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      const { queryByText, unmount } = setup({ user: 'user1' });
+      await waitForElement(() => queryByText('There is 1 new topic'));
+      unmount();
+      setTimeout(() => {
+        expect(apiCalls.loadNewTopicCount).toHaveBeenCalledTimes(1);
+        done();
+      }, 3500);
+    }, 7000);
+    it('displays new topic count as 1 after loadNewTopicCount success when user does not have topics initially', async () => {
+      apiCalls.loadTopics = jest.fn().mockResolvedValue(mockEmptyResponse);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      const { queryByText } = setup({ user: 'user1' });
+      const newTopicCount = await waitForElement(() =>
+        queryByText('There is 1 new topic')
+      );
+      expect(newTopicCount).toBeInTheDocument();
+    });
   });
   describe('Layout', () => {
     it('displays no topic message when the response has empty page', async () => {
