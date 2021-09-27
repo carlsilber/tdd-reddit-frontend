@@ -41,6 +41,23 @@ const mockEmptyResponse = {
   }
 };
 
+const mockSuccessGetNewTopicsList = {
+  data: [
+    {
+      id: 21,
+      content: 'This is the newest topic',
+      date: 1561294668539,
+      user: {
+        id: 1,
+        username: 'user1',
+        displayName: 'display1',
+        image: 'profile1.png'
+      }
+    }
+  ]
+};
+
+
 const mockSuccessGetTopicsSinglePage = {
   data: {
     content: [
@@ -341,6 +358,96 @@ describe('TopicFeed', () => {
       fireEvent.click(loadMore);
       await waitForElement(() => queryByText('This is the oldest topic'));
       expect(queryByText('Load More')).not.toBeInTheDocument();
+    });
+        // load new topics
+    it('calls loadNewTopics with topic id when clicking New Topic Count Card', async () => {
+      useFakeIntervals();
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      apiCalls.loadNewTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetNewTopicsList);
+      const { queryByText } = setup();
+      await waitForDomChange();
+      runTimer();
+      const newTopicCount = await waitForElement(() =>
+        queryByText('There is 1 new topic')
+      );
+      fireEvent.click(newTopicCount);
+      const firstParam = apiCalls.loadNewTopics.mock.calls[0][0];
+      expect(firstParam).toBe(10);
+      useRealIntervals();
+    });
+    it('calls loadNewTopics with topic id and username when clicking New Topic Count Card', async () => {
+      useFakeIntervals();
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      apiCalls.loadNewTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetNewTopicsList);
+      const { queryByText } = setup({ user: 'user1' });
+      await waitForDomChange();
+      runTimer();
+      const newTopicCount = await waitForElement(() =>
+        queryByText('There is 1 new topic')
+      );
+      fireEvent.click(newTopicCount);
+      expect(apiCalls.loadNewTopics).toHaveBeenCalledWith(10, 'user1');
+      useRealIntervals();
+    });
+    it('displays loaded new topic when loadNewTopics api call success', async () => {
+      useFakeIntervals();
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      apiCalls.loadNewTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetNewTopicsList);
+      const { queryByText } = setup({ user: 'user1' });
+      await waitForDomChange();
+      runTimer();
+      const newTopicCount = await waitForElement(() =>
+        queryByText('There is 1 new topic')
+      );
+      fireEvent.click(newTopicCount);
+      const newTopic = await waitForElement(() =>
+        queryByText('This is the newest topic')
+      );
+      expect(newTopic).toBeInTheDocument();
+      useRealIntervals();
+    });
+    it('hides new topic count when loadNewTopics api call success', async () => {
+      useFakeIntervals();
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      apiCalls.loadNewTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetNewTopicsList);
+      const { queryByText } = setup({ user: 'user1' });
+      await waitForDomChange();
+      runTimer();
+      const newTopicCount = await waitForElement(() =>
+        queryByText('There is 1 new topic')
+      );
+      fireEvent.click(newTopicCount);
+      await waitForElement(() => queryByText('This is the newest topic'));
+      expect(queryByText('There is 1 new topic')).not.toBeInTheDocument();
+      useRealIntervals();
     });
   });
 });

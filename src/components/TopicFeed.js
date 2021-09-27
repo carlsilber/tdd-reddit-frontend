@@ -53,6 +53,19 @@ onClickLoadMore = () => {
     });
 };
 
+onClickLoadNew = () => {
+  const topics = this.state.page.content;
+  let topTopicId = 0;
+  if (topics.length > 0) {
+    topTopicId = topics[0].id;
+  }
+  apiCalls.loadNewTopics(topTopicId, this.props.user).then((response) => {
+    const page = { ...this.state.page };
+    page.content = [...response.data, ...page.content];
+    this.setState({ page, newTopicCount: 0 });
+  });
+};
+
     render() {
         if (this.state.isLoadingTopics) {
             return <Spinner />;
@@ -66,7 +79,7 @@ onClickLoadMore = () => {
         return (
             <div>
                 {this.state.newTopicCount > 0 && (
-                  <div className="card card-header text-center">
+                  <div className="card card-header text-center" onClick={this.onClickLoadNew} style={{ cursor: 'pointer' }} >
                 {this.state.newTopicCount === 1 ? 'There is 1 new topic' : `There are ${this.state.newTopicCount} new topics`}
           </div>
         )}
