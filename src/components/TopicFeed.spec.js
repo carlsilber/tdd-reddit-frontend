@@ -57,6 +57,28 @@ const mockSuccessGetNewTopicsList = {
   ]
 };
 
+const mockSuccessGetTopicsMiddleOfMultiPage = {
+  data: {
+    content: [
+      {
+        id: 5,
+        content: 'This topic is in middle page',
+        date: 1561294668539,
+        user: {
+          id: 1,
+          username: 'user1',
+          displayName: 'display1',
+          image: 'profile1.png'
+        }
+      }
+    ],
+    number: 0,
+    first: false,
+    last: false,
+    size: 5,
+    totalPages: 2
+  }
+};
 
 const mockSuccessGetTopicsSinglePage = {
   data: {
@@ -447,6 +469,178 @@ describe('TopicFeed', () => {
       fireEvent.click(newTopicCount);
       await waitForElement(() => queryByText('This is the newest topic'));
       expect(queryByText('There is 1 new topic')).not.toBeInTheDocument();
+      useRealIntervals();
+    });
+    it('does not allow loadOldTopics to be called when there is an active api call about it', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadOldTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsLastOfMultiPage);
+      const { queryByText } = setup();
+      const loadMore = await waitForElement(() => queryByText('Load More'));
+      fireEvent.click(loadMore);
+      fireEvent.click(loadMore);
+
+      expect(apiCalls.loadOldTopics).toHaveBeenCalledTimes(1);
+    });
+    it('replaces Load More with spinner when there is an active api call about it', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadOldTopics = jest.fn().mockImplementation(() => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            resolve(mockSuccessGetTopicsLastOfMultiPage);
+          }, 300);
+        });
+      });
+      const { queryByText } = setup();
+      const loadMore = await waitForElement(() => queryByText('Load More'));
+      fireEvent.click(loadMore);
+      const spinner = await waitForElement(() => queryByText('Loading...'));
+      expect(spinner).toBeInTheDocument();
+      expect(queryByText('Load More')).not.toBeInTheDocument();
+    });
+    it('replaces Spinner with Load More after active api call for loadOldTopics finishes with middle page response', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadOldTopics = jest.fn().mockImplementation(() => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            resolve(mockSuccessGetTopicsMiddleOfMultiPage);
+          }, 300);
+        });
+      });
+      const { queryByText } = setup();
+      const loadMore = await waitForElement(() => queryByText('Load More'));
+      fireEvent.click(loadMore);
+      await waitForElement(() => queryByText('This topic is in middle page'));
+      expect(queryByText('Loading...')).not.toBeInTheDocument();
+      expect(queryByText('Load More')).toBeInTheDocument();
+    });
+    it('replaces Spinner with Load More after active api call for loadOldTopics finishes error', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadOldTopics = jest.fn().mockImplementation(() => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            reject({ response: { data: {} } });
+          }, 300);
+        });
+      });
+      const { queryByText } = setup();
+      const loadMore = await waitForElement(() => queryByText('Load More'));
+      fireEvent.click(loadMore);
+      await waitForElement(() => queryByText('Loading...'));
+      await waitForDomChange();
+      expect(queryByText('Loading...')).not.toBeInTheDocument();
+      expect(queryByText('Load More')).toBeInTheDocument();
+    });
+    // loadNewTopics
+
+    it('does not allow loadNewTopics to be called when there is an active api call about it', async () => {
+      useFakeIntervals();
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      apiCalls.loadNewTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetNewTopicsList);
+      const { queryByText } = setup({ user: 'user1' });
+      await waitForDomChange();
+      runTimer();
+      const newTopicCount = await waitForElement(() =>
+        queryByText('There is 1 new topic')
+      );
+      fireEvent.click(newTopicCount);
+      fireEvent.click(newTopicCount);
+
+      expect(apiCalls.loadNewTopics).toHaveBeenCalledTimes(1);
+      useRealIntervals();
+    });
+    it('replaces There is 1 new topic with spinner when there is an active api call about it', async () => {
+      useFakeIntervals();
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      apiCalls.loadNewTopics = jest.fn().mockImplementation(() => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            resolve(mockSuccessGetNewTopicsList);
+          }, 300);
+        });
+      });
+      const { queryByText } = setup();
+      await waitForDomChange();
+      runTimer();
+      const newTopicCount = await waitForElement(() =>
+        queryByText('There is 1 new topic')
+      );
+      fireEvent.click(newTopicCount);
+      const spinner = await waitForElement(() => queryByText('Loading...'));
+      expect(spinner).toBeInTheDocument();
+      expect(queryByText('There is 1 new topic')).not.toBeInTheDocument();
+      useRealIntervals();
+    });
+    it('removes Spinner and There is 1 new topic after active api call for loadNewTopics finishes with success', async () => {
+      useFakeIntervals();
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      apiCalls.loadNewTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetNewTopicsList);
+      const { queryByText } = setup({ user: 'user1' });
+      await waitForDomChange();
+      runTimer();
+      const newTopicCount = await waitForElement(() =>
+        queryByText('There is 1 new topic')
+      );
+      fireEvent.click(newTopicCount);
+      await waitForElement(() => queryByText('This is the newest topic'));
+      expect(queryByText('Loading...')).not.toBeInTheDocument();
+      expect(queryByText('There is 1 new topic')).not.toBeInTheDocument();
+      useRealIntervals();
+    });
+    it('replaces Spinner with There is 1 new topic after active api call for loadNewTopics fails', async () => {
+      useFakeIntervals();
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+      apiCalls.loadNewTopics = jest.fn().mockImplementation(() => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            reject({ response: { data: {} } });
+          }, 300);
+        });
+      });
+      const { queryByText } = setup();
+      await waitForDomChange();
+      runTimer();
+      const newTopicCount = await waitForElement(() =>
+        queryByText('There is 1 new topic')
+      );
+      fireEvent.click(newTopicCount);
+      await waitForElement(() => queryByText('Loading...'));
+      await waitForDomChange();
+      expect(queryByText('Loading...')).not.toBeInTheDocument();
+      expect(queryByText('There is 1 new topic')).toBeInTheDocument();
       useRealIntervals();
     });
   });
