@@ -65,3 +65,7 @@ export const loadNewTopicCount = (topicId, username) => {
   const path = `${basePath}/${topicId}?direction=after&count=true`;
   return axios.get(path);
 };
+
+export const postTopicFile = (file) => {
+  return axios.post('/api/1.0/topics/upload', file);
+};
