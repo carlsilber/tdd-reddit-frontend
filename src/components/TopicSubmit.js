@@ -12,7 +12,8 @@ class TopicSubmit extends Component {
         pendingApiCall: false,
         errors: {},
         file: undefined,
-        image: undefined
+        image: undefined,
+        attachment: undefined
       };
     
       onChangeContent = (event) => {
@@ -27,27 +28,49 @@ class TopicSubmit extends Component {
         const file = event.target.files[0];
         let reader = new FileReader();
         reader.onloadend = () => {
-          this.setState({
-            image: reader.result,
-            file
-          });
+          this.setState(
+            {
+              image: reader.result,
+              file
+            },
+            () => {
+              this.uploadFile();
+            }
+          );
         };
         reader.readAsDataURL(file);
-      };    
+      };
+
+      uploadFile = () => {
+        const body = new FormData();
+        body.append('file', this.state.file);
+        apiCalls.postTopicFile(body).then((response) => {
+          this.setState({ attachment: response.data });
+        });
+      };
+
+      resetState = () => {
+        this.setState({
+          pendingApiCall: false,
+          focused: false,
+          content: '',
+          errors: {},
+          image: undefined,
+          file: undefined,
+          attachment: undefined
+        });
+      };
     
       onClickPost = () => {
         const body = {
-          content: this.state.content
+          content: this.state.content,
+          attachment: this.state.attachment
         };
         this.setState({ pendingApiCall: true });
         apiCalls
           .postTopic(body)
           .then((response) => {
-            this.setState({
-              focused: false,
-              content: '',
-              pendingApiCall: false
-            });
+            this.resetState();
           })
           .catch((error) => {
             let errors = {};
@@ -64,15 +87,6 @@ class TopicSubmit extends Component {
         });
       };
     
-      onClickCancel = () => {
-        this.setState({
-            focused: false,
-            content: '',
-            errors: {},
-            image: undefined,
-            file: undefined
-        });
-      };
     
   render() {
     let textAreaClassName = 'form-control w-100';
@@ -124,7 +138,7 @@ class TopicSubmit extends Component {
                 />
                 <button
                   className="btn btn-light ml-1"
-                  onClick={this.onClickCancel}
+                  onClick={this.resetState}
                   disabled={this.state.pendingApiCall}
                 >
                   <i className="fas fa-times"></i> Cancel
