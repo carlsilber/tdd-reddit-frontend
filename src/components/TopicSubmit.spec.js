@@ -50,23 +50,24 @@ describe('TopicSubmit', () => {
       });
   });
   describe('Interactions', () => {
+    let textArea;
+    const setupFocused = () => {
+      const rendered = setup();
+      textArea = rendered.container.querySelector('textarea');
+      fireEvent.focus(textArea);
+      return rendered;
+    };
     it('displays 3 rows when focused to textarea', () => {
-      const { container } = setup();
-      const textArea = container.querySelector('textarea');
-      fireEvent.focus(textArea);
+      setupFocused();
       expect(textArea.rows).toBe(3);
-    });
-    it('displays post button when focused to textarea', () => {
-      const { container, queryByText } = setup();
-      const textArea = container.querySelector('textarea');
-      fireEvent.focus(textArea);
+    });  
+    it('displays Post button when focused to textarea', () => {
+      const { queryByText } = setupFocused();
       const postButton = queryByText('Post');
       expect(postButton).toBeInTheDocument();
     });
     it('displays Cancel button when focused to textarea', () => {
-      const { container, queryByText } = setup();
-      const textArea = container.querySelector('textarea');
-      fireEvent.focus(textArea);
+      const { queryByText } = setupFocused();
       const cancelButton = queryByText('Cancel');
       expect(cancelButton).toBeInTheDocument();
     });
@@ -81,17 +82,13 @@ describe('TopicSubmit', () => {
       expect(cancelButton).not.toBeInTheDocument();
     });
     it('returns back to unfocused state after clicking the cancel', () => {
-      const { container, queryByText } = setup();
-      const textArea = container.querySelector('textarea');
-      fireEvent.focus(textArea);
+      const { queryByText } = setupFocused();
       const cancelButton = queryByText('Cancel');
       fireEvent.click(cancelButton);
       expect(queryByText('Cancel')).not.toBeInTheDocument();
     });
     it('calls postTopic with topic request object when clicking Post', () => {
-        const { container, queryByText } = setup();
-        const textArea = container.querySelector('textarea');
-        fireEvent.focus(textArea);
+      const { queryByText } = setupFocused();
         fireEvent.change(textArea, { target: { value: 'Test topic content' } });
   
         const topicButton = queryByText('Post');
@@ -104,9 +101,7 @@ describe('TopicSubmit', () => {
         });
       });
       it('returns back to unfocused state after successful postTopic action', async () => {
-        const { container, queryByText } = setup();
-        const textArea = container.querySelector('textarea');
-        fireEvent.focus(textArea);
+        const { queryByText } = setupFocused();
         fireEvent.change(textArea, { target: { value: 'Test topic content' } });
   
         const topicButton = queryByText('Post');
@@ -118,9 +113,7 @@ describe('TopicSubmit', () => {
         expect(queryByText('Post')).not.toBeInTheDocument();
       });
       it('clear content after successful postTopic action', async () => {
-        const { container, queryByText } = setup();
-        const textArea = container.querySelector('textarea');
-        fireEvent.focus(textArea);
+        const { queryByText } = setupFocused();
         fireEvent.change(textArea, { target: { value: 'Test topic content' } });
   
         const topicButton = queryByText('Post');
@@ -132,9 +125,7 @@ describe('TopicSubmit', () => {
         expect(queryByText('Test topic content')).not.toBeInTheDocument();
       });
       it('clears content after clicking cancel', () => {
-        const { container, queryByText } = setup();
-        const textArea = container.querySelector('textarea');
-        fireEvent.focus(textArea);
+        const { queryByText } = setupFocused();
         fireEvent.change(textArea, { target: { value: 'Test topic content' } });
   
         fireEvent.click(queryByText('Cancel'));
@@ -142,9 +133,7 @@ describe('TopicSubmit', () => {
         expect(queryByText('Test topic content')).not.toBeInTheDocument();
       });
       it('disables Post button when there is postTopic api call', async () => {
-        const { container, queryByText } = setup();
-        const textArea = container.querySelector('textarea');
-        fireEvent.focus(textArea);
+        const { queryByText } = setupFocused();
         fireEvent.change(textArea, { target: { value: 'Test topic content' } });
   
         const postButton = queryByText('Post');
@@ -164,9 +153,7 @@ describe('TopicSubmit', () => {
         expect(mockFunction).toHaveBeenCalledTimes(1);
       });
       it('disables Cancel button when there is postTopic api call', async () => {
-        const { container, queryByText } = setup();
-        const textArea = container.querySelector('textarea');
-        fireEvent.focus(textArea);
+        const { queryByText } = setupFocused();
         fireEvent.change(textArea, { target: { value: 'Test topic content' } });
   
         const postButton = queryByText('Post');
@@ -186,9 +173,7 @@ describe('TopicSubmit', () => {
         expect(cancelButton).toBeDisabled();
       });
       it('displays spinner when there is postTopic api call', async () => {
-        const { container, queryByText } = setup();
-        const textArea = container.querySelector('textarea');
-        fireEvent.focus(textArea);
+        const { queryByText } = setupFocused();
         fireEvent.change(textArea, { target: { value: 'Test topic content' } });
   
         const postButton = queryByText('Post');
@@ -207,9 +192,7 @@ describe('TopicSubmit', () => {
         expect(queryByText('Loading...')).toBeInTheDocument();
       });
       it('enables Post button when postTopic api call fails', async () => {
-        const { container, queryByText } = setup();
-        const textArea = container.querySelector('textarea');
-        fireEvent.focus(textArea);
+        const { queryByText } = setupFocused();
         fireEvent.change(textArea, { target: { value: 'Test topic content' } });
   
         const postButton = queryByText('Post');
@@ -232,9 +215,7 @@ describe('TopicSubmit', () => {
         expect(queryByText('Post')).not.toBeDisabled();
       });
       it('enables Cancel button when postTopic api call fails', async () => {
-        const { container, queryByText } = setup();
-        const textArea = container.querySelector('textarea');
-        fireEvent.focus(textArea);
+        const { queryByText } = setupFocused();
         fireEvent.change(textArea, { target: { value: 'Test topic content' } });
   
         const postButton = queryByText('Post');
@@ -257,9 +238,7 @@ describe('TopicSubmit', () => {
         expect(queryByText('Cancel')).not.toBeDisabled();
       });
       it('enables Post button after successful postTopic action', async () => {
-        const { container, queryByText } = setup();
-        const textArea = container.querySelector('textarea');
-        fireEvent.focus(textArea);
+        const { queryByText } = setupFocused();
         fireEvent.change(textArea, { target: { value: 'Test topic content' } });
   
         const postButton = queryByText('Post');
@@ -272,9 +251,7 @@ describe('TopicSubmit', () => {
         expect(queryByText('Post')).not.toBeDisabled();
       });
       it('displays validation error for content', async () => {
-        const { container, queryByText } = setup();
-        const textArea = container.querySelector('textarea');
-        fireEvent.focus(textArea);
+        const { queryByText } = setupFocused();
         fireEvent.change(textArea, { target: { value: 'Test topic content' } });
   
         const topicButton = queryByText('Post');
@@ -299,9 +276,7 @@ describe('TopicSubmit', () => {
         ).toBeInTheDocument();
       });
       it('clears validation error after clicking cancel', async () => {
-        const { container, queryByText } = setup();
-        const textArea = container.querySelector('textarea');
-        fireEvent.focus(textArea);
+        const { queryByText } = setupFocused();
         fireEvent.change(textArea, { target: { value: 'Test topic content' } });
   
         const topicButton = queryByText('Post');
@@ -327,9 +302,7 @@ describe('TopicSubmit', () => {
         ).not.toBeInTheDocument();
       });
       it('clears validation error after content is changed', async () => {
-        const { container, queryByText } = setup();
-        const textArea = container.querySelector('textarea');
-        fireEvent.focus(textArea);
+        const { queryByText } = setupFocused();
         fireEvent.change(textArea, { target: { value: 'Test topic content' } });
   
         const topicButton = queryByText('Post');
@@ -355,6 +328,52 @@ describe('TopicSubmit', () => {
         expect(
           queryByText('It must have minimum 10 and maximum 5000 characters')
         ).not.toBeInTheDocument();
+      });
+      it('displays file attachment input when text area focused', () => {
+        const { container } = setup();
+        const textArea = container.querySelector('textarea');
+        fireEvent.focus(textArea);
+  
+        const uploadInput = container.querySelector('input');
+        expect(uploadInput.type).toBe('file');
+      });
+      it('displays image component when file selected', async () => {
+        const { container } = setup();
+        const textArea = container.querySelector('textarea');
+        fireEvent.focus(textArea);
+  
+        const uploadInput = container.querySelector('input');
+        expect(uploadInput.type).toBe('file');
+  
+        const file = new File(['dummy content'], 'example.png', {
+          type: 'image/png'
+        });
+        fireEvent.change(uploadInput, { target: { files: [file] } });
+  
+        await waitForDomChange();
+  
+        const images = container.querySelectorAll('img');
+        const attachmentImage = images[1];
+        expect(attachmentImage.src).toContain('data:image/png;base64');
+      });
+      it('removes selected image after clicking cancel', async () => {
+        const { queryByText, container } = setupFocused();
+  
+        const uploadInput = container.querySelector('input');
+        expect(uploadInput.type).toBe('file');
+  
+        const file = new File(['dummy content'], 'example.png', {
+          type: 'image/png'
+        });
+        fireEvent.change(uploadInput, { target: { files: [file] } });
+  
+        await waitForDomChange();
+  
+        fireEvent.click(queryByText('Cancel'));
+        fireEvent.focus(textArea);
+  
+        const images = container.querySelectorAll('img');
+        expect(images.length).toBe(1);
       });
   });
 });
