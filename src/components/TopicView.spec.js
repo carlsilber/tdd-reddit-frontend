@@ -3,21 +3,51 @@ import { render } from '@testing-library/react';
 import TopicView from './TopicView';
 import { MemoryRouter } from 'react-router-dom';
 
-const setup = () => {
+const topicWithoutAttachment = {
+  id: 10,
+  content: 'This is the first topic',
+  user: {
+    id: 1,
+    username: 'user1',
+    displayName: 'display1',
+    image: 'profile1.png'
+  }
+};
+
+const topicWithAttachment = {
+  id: 10,
+  content: 'This is the first topic',
+  user: {
+    id: 1,
+    username: 'user1',
+    displayName: 'display1',
+    image: 'profile1.png'
+  },
+  attachment: {
+    fileType: 'image/png',
+    name: 'attached-image.png'
+  }
+};
+
+const topicWithPdfAttachment = {
+  id: 10,
+  content: 'This is the first topic',
+  user: {
+    id: 1,
+    username: 'user1',
+    displayName: 'display1',
+    image: 'profile1.png'
+  },
+  attachment: {
+    fileType: 'application/pdf',
+    name: 'attached.pdf'
+  }
+};
+
+const setup = (topic = topicWithAttachment) => {
   const oneMinute = 60 * 1000;
   const date = new Date(new Date() - oneMinute);
-
-  const topic = {
-    id: 10,
-    content: 'This is the first topic',
-    date: date,
-    user: {
-      id: 1,
-      username: 'user1',
-      displayName: 'display1',
-      image: 'profile1.png'
-    }
-  };
+topic.date = date;
   return render(
     <MemoryRouter>
       <TopicView topic={topic} />
@@ -45,9 +75,27 @@ describe('TopicView', () => {
       expect(queryByText('1 minute ago')).toBeInTheDocument();
     });
     it('has link to user page', () => {
-        const { container } = setup();
-        const anchor = container.querySelector('a');
-        expect(anchor.getAttribute('href')).toBe('/user1');
-      });
+      const { container } = setup();
+      const anchor = container.querySelector('a');
+      expect(anchor.getAttribute('href')).toBe('/user1');
+    });
+    it('displays file attachment image', () => {
+      const { container } = setup(topicWithAttachment);
+      const images = container.querySelectorAll('img');
+      expect(images.length).toBe(2);
+    });
+    it('does not displays file attachment when attachment type is not image', () => {
+      const { container } = setup(topicWithPdfAttachment);
+      const images = container.querySelectorAll('img');
+      expect(images.length).toBe(1);
+    });
+    it('sts the attachment path as source for file attachment image', () => {
+      const { container } = setup(topicWithAttachment);
+      const images = container.querySelectorAll('img');
+      const attachmentImage = images[1];
+      expect(attachmentImage.src).toContain(
+        '/images/attachments/' + topicWithAttachment.attachment.name
+      );
+    });
   });
 });

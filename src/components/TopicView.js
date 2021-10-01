@@ -9,6 +9,8 @@ class TopicView extends Component {
         const { user, date } = topic;
         const { username, displayName, image } = user;
         const relativeDate = format(date);
+        const attachmentImageVisible =
+        topic.attachment && topic.attachment.fileType.startsWith('image');
         return (
           <div className="card p-1">
             <div className="d-flex">
@@ -29,6 +31,15 @@ class TopicView extends Component {
               </div>
             </div>
             <div className="pl-5">{topic.content}</div>
+            {attachmentImageVisible && (
+          <div className="pl-5">
+            <img
+              alt="attachment"
+              src={`/images/attachments/${topic.attachment.name}`}
+              className="img-fluid"
+            />
+          </div>
+        )}
           </div>
         );
       }
