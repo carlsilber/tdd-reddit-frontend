@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import * as apiCalls from '../api/apiCalls';
 import Spinner from './Spinner';
 import TopicView from './TopicView';
+import Modal from './Modal';
 
 class TopicFeed extends Component {
     state = {
@@ -110,6 +111,7 @@ onClickLoadNew = () => {
                      style={{cursor: this.state.isLoadingOldTopics ? 'not-allowed' : 'pointer'}}>{this.state.isLoadingOldTopics ? <Spinner /> : 'Load More'}
                 </div>
             )}
+            <Modal />
           </div>
         );
     }
