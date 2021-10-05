@@ -70,7 +70,6 @@ export const postTopicFile = (file) => {
   return axios.post('/api/1.0/topics/upload', file);
 };
 
-
 export const deleteTopic = (topicId) => {
   return axios.delete('/api/1.0/topics/' + topicId);
 };

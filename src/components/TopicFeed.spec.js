@@ -3,6 +3,18 @@ import { render, waitForDomChange, waitForElement, fireEvent } from '@testing-li
 import TopicFeed from './TopicFeed';
 import * as apiCalls from '../api/apiCalls';
 import { MemoryRouter } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { createStore } from 'redux';
+import authReducer from '../redux/authReducer';
+
+const loggedInStateUser1 = {
+  id: 1,
+  username: 'user1',
+  displayName: 'display1',
+  image: 'profile1.png',
+  password: 'P4ssword',
+  isLoggedIn: true
+};
 
 const originalSetInterval = window.setInterval;
 const originalClearInterval = window.clearInterval;
@@ -27,11 +39,14 @@ const runTimer = () => {
   timedFunction && timedFunction();
 };
 
-const setup = (props) => {
+const setup = (props, state = loggedInStateUser1) => {
+  const store = createStore(authReducer, state);
   return render(
-    <MemoryRouter>
-      <TopicFeed {...props} />
-    </MemoryRouter>
+    <Provider store={store}>
+      <MemoryRouter>
+        <TopicFeed {...props} />
+      </MemoryRouter>
+    </Provider>
   );
 };
 

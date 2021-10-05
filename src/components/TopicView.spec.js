@@ -2,6 +2,27 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import TopicView from './TopicView';
 import { MemoryRouter } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { createStore } from 'redux';
+import authReducer from '../redux/authReducer';
+
+const loggedInStateUser1 = {
+  id: 1,
+  username: 'user1',
+  displayName: 'display1',
+  image: 'profile1.png',
+  password: 'P4ssword',
+  isLoggedIn: true
+};
+
+const loggedInStateUser2 = {
+  id: 2,
+  username: 'user2',
+  displayName: 'display2',
+  image: 'profile2.png',
+  password: 'P4ssword',
+  isLoggedIn: true
+};
 
 const topicWithoutAttachment = {
   id: 10,
@@ -44,14 +65,17 @@ const topicWithPdfAttachment = {
   }
 };
 
-const setup = (topic = topicWithAttachment) => {
+const setup = (topic = topicWithAttachment, state = loggedInStateUser1) => {
   const oneMinute = 60 * 1000;
   const date = new Date(new Date() - oneMinute);
 topic.date = date;
+const store = createStore(authReducer, state);
   return render(
-    <MemoryRouter>
-      <TopicView topic={topic} />
-    </MemoryRouter>
+    <Provider store={store}>
+      <MemoryRouter>
+        <TopicView topic={topic} />
+      </MemoryRouter>
+    </Provider>
   );
 };
 
@@ -96,6 +120,14 @@ describe('TopicView', () => {
       expect(attachmentImage.src).toContain(
         '/images/attachments/' + topicWithAttachment.attachment.name
       );
+    });
+    it('displays delete button when topic owned by logged in user', () => {
+      const { container } = setup();
+      expect(container.querySelector('button')).toBeInTheDocument();
+    });
+    it('does not display delete button when topic is not owned by logged in user', () => {
+      const { container } = setup(topicWithoutAttachment, loggedInStateUser2);
+      expect(container.querySelector('button')).not.toBeInTheDocument();
     });
   });
 });
