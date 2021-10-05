@@ -154,4 +154,13 @@ describe('apiCalls', () => {
       expect(path).toBe('/api/1.0/topics/upload');
     });
   });
+  describe('deleteTopic', () => {
+    it('calls /api/1.0/topics/5 when topic id param provided as 5', () => {
+      const mockDelete = jest.fn();
+      axios.delete = mockDelete;
+      apiCalls.deleteTopic(5);
+      const path = mockDelete.mock.calls[0][0];
+      expect(path).toBe('/api/1.0/topics/5');
+    });
+  });
 });
