@@ -12,7 +12,8 @@ class TopicFeed extends Component {
         isLoadingTopics: false, 
         newTopicCount: 0,
         isLoadingOldTopics: false,
-        isLoadingNewTopics: false
+        isLoadingNewTopics: false,
+        isDeletingTopic: false
       };
     
 componentDidMount() {
@@ -87,6 +88,22 @@ onClickModalCancel = () => {
   this.setState({ topicToBeDeleted: undefined });
 };
 
+onClickModalOk = () => {
+  this.setState({ isDeletingTopic: true });
+  apiCalls.deleteTopic(this.state.topicToBeDeleted.id).then((response) => {
+    const page = { ...this.state.page };
+    page.content = page.content.filter(
+      (topic) => topic.id !== this.state.topicToBeDeleted.id
+    );
+    this.setState({
+      topicToBeDeleted: undefined,
+      page,
+      isDeletingTopic: false
+    });
+  });
+};
+
+
 
     render() {
         if (this.state.isLoadingTopics) {
@@ -126,6 +143,8 @@ onClickModalCancel = () => {
               body={ this.state.topicToBeDeleted && `Are you sure to delete '${this.state.topicToBeDeleted.content}'?` }
               title="Delete!"
               okButton="Delete Topic"
+              onClickOk={this.onClickModalOk}
+              pendingApiCall={this.state.isDeletingTopic}
             />
           </div>
         );

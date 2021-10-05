@@ -707,6 +707,135 @@ describe('TopicFeed', () => {
       );
       expect(message).toBeInTheDocument();
     });
+    it('calls deleteTopic api with topic id when delete button is clicked on modal', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+
+      apiCalls.deleteTopic = jest.fn().mockResolvedValue({});
+      const { container, queryByText } = setup();
+      await waitForDomChange();
+      const deleteButton = container.querySelectorAll('button')[0];
+      fireEvent.click(deleteButton);
+      const deleteTopicButton = queryByText('Delete Topic');
+      fireEvent.click(deleteTopicButton);
+      expect(apiCalls.deleteTopic).toHaveBeenCalledWith(10);
+    });
+    it('hides modal after successful deleteTopic api call', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+
+      apiCalls.deleteTopic = jest.fn().mockResolvedValue({});
+      const { container, queryByText, queryByTestId } = setup();
+      await waitForDomChange();
+      const deleteButton = container.querySelectorAll('button')[0];
+      fireEvent.click(deleteButton);
+      const deleteTopicButton = queryByText('Delete Topic');
+      fireEvent.click(deleteTopicButton);
+      await waitForDomChange();
+      const modalRootDiv = queryByTestId('modal-root');
+      expect(modalRootDiv).not.toHaveClass('d-block show');
+    });
+    it('removes the deleted topic from document after successful deleteTopic api call', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+
+      apiCalls.deleteTopic = jest.fn().mockResolvedValue({});
+      const { container, queryByText } = setup();
+      await waitForDomChange();
+      const deleteButton = container.querySelectorAll('button')[0];
+      fireEvent.click(deleteButton);
+      const deleteTopicButton = queryByText('Delete Topic');
+      fireEvent.click(deleteTopicButton);
+      await waitForDomChange();
+      const deletedTopicContent = queryByText('This is the latest topic');
+      expect(deletedTopicContent).not.toBeInTheDocument();
+    });
+    it('disables Modal Buttons when api call in progress', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+
+      apiCalls.deleteTopic = jest.fn().mockImplementation(() => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            resolve({});
+          }, 300);
+        });
+      });
+      const { container, queryByText } = setup();
+      await waitForDomChange();
+      const deleteButton = container.querySelectorAll('button')[0];
+      fireEvent.click(deleteButton);
+      const deleteTopicButton = queryByText('Delete Topic');
+      fireEvent.click(deleteTopicButton);
+
+      expect(deleteTopicButton).toBeDisabled();
+      expect(queryByText('Cancel')).toBeDisabled();
+    });
+    it('displays spinner when api call in progress', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+
+      apiCalls.deleteTopic = jest.fn().mockImplementation(() => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            resolve({});
+          }, 300);
+        });
+      });
+      const { container, queryByText } = setup();
+      await waitForDomChange();
+      const deleteButton = container.querySelectorAll('button')[0];
+      fireEvent.click(deleteButton);
+      const deleteTopicButton = queryByText('Delete Topic');
+      fireEvent.click(deleteTopicButton);
+      const spinner = queryByText('Loading...');
+      expect(spinner).toBeInTheDocument();
+    });
+    it('hides spinner when api call finishes', async () => {
+      apiCalls.loadTopics = jest
+        .fn()
+        .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
+      apiCalls.loadNewTopicCount = jest
+        .fn()
+        .mockResolvedValue({ data: { count: 1 } });
+
+      apiCalls.deleteTopic = jest.fn().mockImplementation(() => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            resolve({});
+          }, 300);
+        });
+      });
+      const { container, queryByText } = setup();
+      await waitForDomChange();
+      const deleteButton = container.querySelectorAll('button')[0];
+      fireEvent.click(deleteButton);
+      const deleteTopicButton = queryByText('Delete Topic');
+      fireEvent.click(deleteTopicButton);
+      await waitForDomChange();
+      const spinner = queryByText('Loading...');
+      expect(spinner).not.toBeInTheDocument();
+    });
   });
 });
 
