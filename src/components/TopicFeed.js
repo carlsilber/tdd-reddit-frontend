@@ -79,6 +79,15 @@ onClickLoadNew = () => {
     });
 };
 
+onClickDeleteTopic = (topic) => {
+  this.setState({ topicToBeDeleted: topic });
+};
+
+onClickModalCancel = () => {
+  this.setState({ topicToBeDeleted: undefined });
+};
+
+
     render() {
         if (this.state.isLoadingTopics) {
             return <Spinner />;
@@ -103,7 +112,7 @@ onClickLoadNew = () => {
           </div>
         )}
             {this.state.page.content.map((topic) => {
-              return <TopicView key={topic.id} topic={topic}/>;
+              return <TopicView key={topic.id} topic={topic} onClickDelete={() => this.onClickDeleteTopic(topic)}/>;
             })}
               {this.state.page.last === false && (
                 <div className="card card-header text-center" 
@@ -111,7 +120,13 @@ onClickLoadNew = () => {
                      style={{cursor: this.state.isLoadingOldTopics ? 'not-allowed' : 'pointer'}}>{this.state.isLoadingOldTopics ? <Spinner /> : 'Load More'}
                 </div>
             )}
-            <Modal />
+            <Modal
+              visible={this.state.topicToBeDeleted && true}
+              onClickCancel={this.onClickModalCancel}
+              body={ this.state.topicToBeDeleted && `Are you sure to delete '${this.state.topicToBeDeleted.content}'?` }
+              title="Delete!"
+              okButton="Delete Topic"
+            />
           </div>
         );
     }

@@ -6,7 +6,7 @@ import { connect} from 'react-redux';
 
 class TopicView extends Component {
     render() {
-        const { topic } = this.props;
+        const { topic, onClickDelete } = this.props;
         const { user, date } = topic;
         const { username, displayName, image } = user;
         const relativeDate = format(date);
@@ -33,7 +33,7 @@ class TopicView extends Component {
                 <span className="text-black-50">{relativeDate}</span>
               </div>
               {ownedByLoggedInUser && (
-                <button className="btn btn-outline-danger btn-sm">
+                <button className="btn btn-outline-danger btn-sm" onClick={onClickDelete}>
                   <i className="far fa-trash-alt" />
                 </button>
               )}
