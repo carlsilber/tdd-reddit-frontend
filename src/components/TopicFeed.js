@@ -42,6 +42,9 @@ checkCount = () => {
 
 
 onClickLoadMore = () => {
+  if (this.state.isLoadingOldTopics) {
+    return;
+  }
   const topics = this.state.page.content;
   if (topics.length === 0) {
     return;
@@ -62,6 +65,9 @@ onClickLoadMore = () => {
 };
 
 onClickLoadNew = () => {
+  if (this.state.isLoadingNewTopics) {
+    return;
+  }
   const topics = this.state.page.content;
   let topTopicId = 0;
   if (topics.length > 0) {
@@ -122,7 +128,7 @@ onClickModalOk = () => {
             <div>
                 {this.state.newTopicCount > 0 && (
                   <div className="card card-header text-center" 
-                       onClick={!this.state.isLoadingNewTopics && this.onClickLoadNew}
+                       onClick={this.onClickLoadNew}
                        style={{cursor: this.state.isLoadingNewTopics ? 'not-allowed' : 'pointer'}} 
                   >
                 {this.state.isLoadingNewTopics ? <Spinner /> : newTopicCountMessage}

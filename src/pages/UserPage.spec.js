@@ -260,17 +260,17 @@ describe('UserPage', () => {
       const spinner = queryByText('Loading...');
       expect(spinner).toBeInTheDocument();
     });
-    it('disabels save button when there is updateUser api call', async () => {
-      const { queryByText } = await setupForEdit();
+    it('disables save button when there is updateUser api call', async () => {
+      const { queryByRole } = await setupForEdit();
       apiCalls.updateUser = mockDelayedUpdateSuccess();
 
-      const saveButton = queryByText('Save');
+      const saveButton = queryByRole('button', { name: 'Save' });
       fireEvent.click(saveButton);
 
       expect(saveButton).toBeDisabled();
     });
 
-    it('disabels cancel button when there is updateUser api call', async () => {
+    it('disables cancel button when there is updateUser api call', async () => {
       const { queryByText } = await setupForEdit();
       apiCalls.updateUser = mockDelayedUpdateSuccess();
 

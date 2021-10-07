@@ -408,7 +408,7 @@ describe('TopicSubmit', () => {
         await waitForDomChange();
         expect(apiCalls.postTopicFile).toHaveBeenCalledTimes(1);
       });
-      it('calls postTopicFile with selected file', async (done) => {
+      it('calls postTopicFile with selected file', async () => {
         apiCalls.postTopicFile = jest.fn().mockResolvedValue({
           data: {
             id: 1,
@@ -430,13 +430,20 @@ describe('TopicSubmit', () => {
   
         const body = apiCalls.postTopicFile.mock.calls[0][0];
   
-        const reader = new FileReader();
+        const readFile = () => {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
   
-        reader.onloadend = () => {
-          expect(reader.result).toBe('dummy content');
-          done();
+            reader.onloadend = () => {
+              resolve(reader.result);
+            };
+            reader.readAsText(body.get('file'));
+          });
         };
-        reader.readAsText(body.get('file'));
+
+        const result = await readFile();
+
+        expect(result).toBe('dummy content');
       });
       it('calls postTopic with topic with file attachment object when clicking Post', async () => {
         apiCalls.postTopicFile = jest.fn().mockResolvedValue({
