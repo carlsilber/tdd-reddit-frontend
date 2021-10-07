@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, waitForDomChange, waitForElement, fireEvent } from '@testing-library/react';
+import { render, fireEvent, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
 import TopicFeed from './TopicFeed';
 import * as apiCalls from '../api/apiCalls';
 import { MemoryRouter } from 'react-router-dom';
@@ -206,10 +206,10 @@ describe('TopicFeed', () => {
       apiCalls.loadNewTopicCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
-      const { queryByText } = setup();
-      await waitForDomChange();
+      const { findByText } = setup();
+      await findByText('This is the latest topic');
       runTimer();
-      await waitForElement(() => queryByText('There is 1 new topic'));
+      await findByText('There is 1 new topic');
       const firstParam = apiCalls.loadNewTopicCount.mock.calls[0][0];
       expect(firstParam).toBe(10);
       useRealIntervals();
@@ -222,10 +222,10 @@ describe('TopicFeed', () => {
       apiCalls.loadNewTopicCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
-      const { queryByText } = setup({ user: 'user1' });
-      await waitForDomChange();
+      const { findByText } = setup({ user: 'user1' });
+      await findByText('This is the latest topic');
       runTimer();
-      await waitForElement(() => queryByText('There is 1 new topic'));
+      await findByText('There is 1 new topic');
       expect(apiCalls.loadNewTopicCount).toHaveBeenCalledWith(10, 'user1');
       useRealIntervals();
     });
@@ -237,12 +237,10 @@ describe('TopicFeed', () => {
       apiCalls.loadNewTopicCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
-      const { queryByText } = setup({ user: 'user1' });
-      await waitForDomChange();
+      const { findByText } = setup({ user: 'user1' });
+      await findByText('This is the latest topic');
       runTimer();
-      const newTopicCount = await waitForElement(() =>
-        queryByText('There is 1 new topic')
-      );
+      const newTopicCount = await findByText('There is 1 new topic');
       expect(newTopicCount).toBeInTheDocument();
       useRealIntervals();
     });
@@ -254,17 +252,15 @@ describe('TopicFeed', () => {
       apiCalls.loadNewTopicCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
-      const { queryByText } = setup({ user: 'user1' });
-      await waitForDomChange();
+      const { findByText } = setup({ user: 'user1' });
+      await findByText('This is the latest topic');
       runTimer();
-      await waitForElement(() => queryByText('There is 1 new topic'));
+      await findByText('There is 1 new topic');
       apiCalls.loadNewTopicCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 2 } });
-        runTimer();
-      const newTopicCount = await waitForElement(() =>
-        queryByText('There are 2 new topics')
-      );
+      runTimer();
+      const newTopicCount = await findByText('There are 2 new topics');
       expect(newTopicCount).toBeInTheDocument();
       useRealIntervals();
     });
@@ -276,10 +272,10 @@ describe('TopicFeed', () => {
       apiCalls.loadNewTopicCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
-      const { queryByText, unmount } = setup({ user: 'user1' });
-      await waitForDomChange();
+      const { findByText, unmount } = setup({ user: 'user1' });
+      await findByText('This is the latest topic');
       runTimer();
-      await waitForElement(() => queryByText('There is 1 new topic'));
+      await findByText('There is 1 new topic');
       unmount();
       expect(apiCalls.loadNewTopicCount).toHaveBeenCalledTimes(1);
       useRealIntervals();
@@ -290,12 +286,10 @@ describe('TopicFeed', () => {
       apiCalls.loadNewTopicCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
-      const { queryByText } = setup({ user: 'user1' });
-      await waitForDomChange();
+      const { findByText } = setup({ user: 'user1' });
+      await findByText('There are no topics');
       runTimer();
-      const newTopicCount = await waitForElement(() =>
-        queryByText('There is 1 new topic')
-      );
+      const newTopicCount = await findByText('There is 1 new topic');
       expect(newTopicCount).toBeInTheDocument();
       useRealIntervals();
     });
@@ -303,10 +297,8 @@ describe('TopicFeed', () => {
   describe('Layout', () => {
     it('displays no topic message when the response has empty page', async () => {
       apiCalls.loadTopics = jest.fn().mockResolvedValue(mockEmptyResponse);
-      const { queryByText } = setup();
-      const message = await waitForElement(() =>
-        queryByText('There are no topics')
-      );
+      const { findByText } = setup();
+      const message = await findByText('There are no topics');
       expect(message).toBeInTheDocument();
     });
     it('does not display no topic message when the response has page of topic', async () => {
@@ -314,8 +306,10 @@ describe('TopicFeed', () => {
         .fn()
         .mockResolvedValue(mockSuccessGetTopicsSinglePage);
       const { queryByText } = setup();
-      await waitForDomChange();
-      expect(queryByText('There are no topics')).not.toBeInTheDocument();
+      const message = queryByText('There are no topics');
+      await waitFor(() => {
+        expect(message).not.toBeInTheDocument();
+      });
     });
     it('displays spinner when loading the topics', async () => {
       apiCalls.loadTopics = jest.fn().mockImplementation(() => {
@@ -332,18 +326,16 @@ describe('TopicFeed', () => {
       apiCalls.loadTopics = jest
         .fn()
         .mockResolvedValue(mockSuccessGetTopicsSinglePage);
-      const { queryByText } = setup();
-      const topicContent = await waitForElement(() =>
-        queryByText('This is the latest topic')
-      );
+      const { findByText } = setup();
+      const topicContent = await findByText('This is the latest topic');
       expect(topicContent).toBeInTheDocument();
     });
     it('displays Load More when there are next pages', async () => {
       apiCalls.loadTopics = jest
         .fn()
         .mockResolvedValue(mockSuccessGetTopicsFirstOfMultiPage);
-      const { queryByText } = setup();
-      const loadMore = await waitForElement(() => queryByText('Load More'));
+      const { findByText } = setup();
+      const loadMore = await findByText('Load More');
       expect(loadMore).toBeInTheDocument();
     });
   });
@@ -355,8 +347,8 @@ describe('TopicFeed', () => {
       apiCalls.loadOldTopics = jest
         .fn()
         .mockResolvedValue(mockSuccessGetTopicsLastOfMultiPage);
-      const { queryByText } = setup();
-      const loadMore = await waitForElement(() => queryByText('Load More'));
+      const { findByText } = setup();
+      const loadMore = await findByText('Load More');
       fireEvent.click(loadMore);
       const firstParam = apiCalls.loadOldTopics.mock.calls[0][0];
       expect(firstParam).toBe(9);
@@ -368,8 +360,8 @@ describe('TopicFeed', () => {
       apiCalls.loadOldTopics = jest
         .fn()
         .mockResolvedValue(mockSuccessGetTopicsLastOfMultiPage);
-      const { queryByText } = setup({ user: 'user1' });
-      const loadMore = await waitForElement(() => queryByText('Load More'));
+      const { findByText } = setup({ user: 'user1' });
+      const loadMore = await findByText('Load More');
       fireEvent.click(loadMore);
       expect(apiCalls.loadOldTopics).toHaveBeenCalledWith(9, 'user1');
     });
@@ -380,12 +372,10 @@ describe('TopicFeed', () => {
       apiCalls.loadOldTopics = jest
         .fn()
         .mockResolvedValue(mockSuccessGetTopicsLastOfMultiPage);
-      const { queryByText } = setup();
-      const loadMore = await waitForElement(() => queryByText('Load More'));
+      const { findByText } = setup();
+      const loadMore = await findByText('Load More');
       fireEvent.click(loadMore);
-      const oldTopic = await waitForElement(() =>
-        queryByText('This is the oldest topic')
-      );
+      const oldTopic = await findByText('This is the oldest topic');
       expect(oldTopic).toBeInTheDocument();
     });
     it('hides Load More when loadOldTopics api call returns last page', async () => {
@@ -395,11 +385,12 @@ describe('TopicFeed', () => {
       apiCalls.loadOldTopics = jest
         .fn()
         .mockResolvedValue(mockSuccessGetTopicsLastOfMultiPage);
-      const { queryByText } = setup();
-      const loadMore = await waitForElement(() => queryByText('Load More'));
+      const { findByText } = setup();
+      const loadMore = await findByText('Load More');
       fireEvent.click(loadMore);
-      await waitForElement(() => queryByText('This is the oldest topic'));
-      expect(queryByText('Load More')).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(loadMore).not.toBeInTheDocument();
+      });
     });
         // load new topics
     it('calls loadNewTopics with topic id when clicking New Topic Count Card', async () => {
@@ -413,12 +404,10 @@ describe('TopicFeed', () => {
       apiCalls.loadNewTopics = jest
         .fn()
         .mockResolvedValue(mockSuccessGetNewTopicsList);
-      const { queryByText } = setup();
-      await waitForDomChange();
+      const { findByText } = setup();
+      await findByText('This is the latest topic');
       runTimer();
-      const newTopicCount = await waitForElement(() =>
-        queryByText('There is 1 new topic')
-      );
+      const newTopicCount = await findByText('There is 1 new topic');
       fireEvent.click(newTopicCount);
       const firstParam = apiCalls.loadNewTopics.mock.calls[0][0];
       expect(firstParam).toBe(10);
@@ -435,12 +424,10 @@ describe('TopicFeed', () => {
       apiCalls.loadNewTopics = jest
         .fn()
         .mockResolvedValue(mockSuccessGetNewTopicsList);
-      const { queryByText } = setup({ user: 'user1' });
-      await waitForDomChange();
+      const { findByText } = setup({ user: 'user1' });
+      await findByText('This is the latest topic');
       runTimer();
-      const newTopicCount = await waitForElement(() =>
-        queryByText('There is 1 new topic')
-      );
+      const newTopicCount = await findByText('There is 1 new topic');
       fireEvent.click(newTopicCount);
       expect(apiCalls.loadNewTopics).toHaveBeenCalledWith(10, 'user1');
       useRealIntervals();
@@ -456,16 +443,13 @@ describe('TopicFeed', () => {
       apiCalls.loadNewTopics = jest
         .fn()
         .mockResolvedValue(mockSuccessGetNewTopicsList);
-      const { queryByText } = setup({ user: 'user1' });
-      await waitForDomChange();
+      const { findByText } = setup({ user: 'user1' });
+      await findByText('This is the latest topic');
       runTimer();
-      const newTopicCount = await waitForElement(() =>
-        queryByText('There is 1 new topic')
-      );
+      const newTopicCount = await findByText('There is 1 new topic');
       fireEvent.click(newTopicCount);
-      const newTopic = await waitForElement(() =>
-        queryByText('This is the newest topic')
-      );
+      const newTopic = await findByText('This is the newest topic');
+
       expect(newTopic).toBeInTheDocument();
       useRealIntervals();
     });
@@ -480,14 +464,12 @@ describe('TopicFeed', () => {
       apiCalls.loadNewTopics = jest
         .fn()
         .mockResolvedValue(mockSuccessGetNewTopicsList);
-      const { queryByText } = setup({ user: 'user1' });
-      await waitForDomChange();
+      const { findByText, queryByText } = setup({ user: 'user1' });
+      await findByText('This is the latest topic');
       runTimer();
-      const newTopicCount = await waitForElement(() =>
-        queryByText('There is 1 new topic')
-      );
+      const newTopicCount = await findByText('There is 1 new topic');
       fireEvent.click(newTopicCount);
-      await waitForElement(() => queryByText('This is the newest topic'));
+      await findByText('This is the newest topic');
       expect(queryByText('There is 1 new topic')).not.toBeInTheDocument();
       useRealIntervals();
     });
@@ -498,9 +480,9 @@ describe('TopicFeed', () => {
       apiCalls.loadOldTopics = jest
         .fn()
         .mockResolvedValue(mockSuccessGetTopicsLastOfMultiPage);
-      const { queryByText } = setup();
-      const loadMore = await waitForElement(() => queryByText('Load More'));
-      fireEvent.click(loadMore);
+      const { findByText } = setup();
+      console.log(findByText);
+      const loadMore = await findByText('Load More');
       fireEvent.click(loadMore);
 
       expect(apiCalls.loadOldTopics).toHaveBeenCalledTimes(1);
@@ -516,10 +498,10 @@ describe('TopicFeed', () => {
           }, 300);
         });
       });
-      const { queryByText } = setup();
-      const loadMore = await waitForElement(() => queryByText('Load More'));
+      const { queryByText, findByText } = setup();
+      const loadMore = await findByText('Load More');
       fireEvent.click(loadMore);
-      const spinner = await waitForElement(() => queryByText('Loading...'));
+      const spinner = await findByText('Loading...');
       expect(spinner).toBeInTheDocument();
       expect(queryByText('Load More')).not.toBeInTheDocument();
     });
@@ -534,10 +516,10 @@ describe('TopicFeed', () => {
           }, 300);
         });
       });
-      const { queryByText } = setup();
-      const loadMore = await waitForElement(() => queryByText('Load More'));
+      const { queryByText, findByText } = setup();
+      const loadMore = await findByText('Load More');
       fireEvent.click(loadMore);
-      await waitForElement(() => queryByText('This topic is in middle page'));
+      await findByText('This topic is in middle page');
       expect(queryByText('Loading...')).not.toBeInTheDocument();
       expect(queryByText('Load More')).toBeInTheDocument();
     });
@@ -552,11 +534,11 @@ describe('TopicFeed', () => {
           }, 300);
         });
       });
-      const { queryByText } = setup();
-      const loadMore = await waitForElement(() => queryByText('Load More'));
+      const { queryByText, findByText } = setup();
+      const loadMore = await findByText('Load More');
       fireEvent.click(loadMore);
-      await waitForElement(() => queryByText('Loading...'));
-      await waitForDomChange();
+      const spinner = await findByText('Loading...');
+      await waitForElementToBeRemoved(spinner);
       expect(queryByText('Loading...')).not.toBeInTheDocument();
       expect(queryByText('Load More')).toBeInTheDocument();
     });
@@ -573,12 +555,11 @@ describe('TopicFeed', () => {
       apiCalls.loadNewTopics = jest
         .fn()
         .mockResolvedValue(mockSuccessGetNewTopicsList);
-      const { queryByText } = setup({ user: 'user1' });
-      await waitForDomChange();
+      const { findByText } = setup({ user: 'user1' });
+      await findByText('This is the latest topic');
       runTimer();
-      const newTopicCount = await waitForElement(() =>
-        queryByText('There is 1 new topic')
-      );
+      const newTopicCount = await findByText('There is 1 new topic');
+
       fireEvent.click(newTopicCount);
       fireEvent.click(newTopicCount);
 
@@ -600,14 +581,12 @@ describe('TopicFeed', () => {
           }, 300);
         });
       });
-      const { queryByText } = setup();
-      await waitForDomChange();
+      const { queryByText, findByText } = setup();
+      await findByText('This is the latest topic');
       runTimer();
-      const newTopicCount = await waitForElement(() =>
-        queryByText('There is 1 new topic')
-      );
+      const newTopicCount = await findByText('There is 1 new topic');
       fireEvent.click(newTopicCount);
-      const spinner = await waitForElement(() => queryByText('Loading...'));
+      const spinner = await findByText('Loading...');
       expect(spinner).toBeInTheDocument();
       expect(queryByText('There is 1 new topic')).not.toBeInTheDocument();
       useRealIntervals();
@@ -623,14 +602,12 @@ describe('TopicFeed', () => {
       apiCalls.loadNewTopics = jest
         .fn()
         .mockResolvedValue(mockSuccessGetNewTopicsList);
-      const { queryByText } = setup({ user: 'user1' });
-      await waitForDomChange();
+      const { queryByText, findByText } = setup({ user: 'user1' });
+      await findByText('This is the latest topic');
       runTimer();
-      const newTopicCount = await waitForElement(() =>
-        queryByText('There is 1 new topic')
-      );
+      const newTopicCount = await findByText('There is 1 new topic');
       fireEvent.click(newTopicCount);
-      await waitForElement(() => queryByText('This is the newest topic'));
+      await findByText('This is the newest topic');
       expect(queryByText('Loading...')).not.toBeInTheDocument();
       expect(queryByText('There is 1 new topic')).not.toBeInTheDocument();
       useRealIntervals();
@@ -650,17 +627,16 @@ describe('TopicFeed', () => {
           }, 300);
         });
       });
-      const { queryByText } = setup();
-      await waitForDomChange();
+      const { queryByText, findByText } = setup();
+      await findByText('This is the latest topic');
       runTimer();
-      const newTopicCount = await waitForElement(() =>
-        queryByText('There is 1 new topic')
-      );
+      const newTopicCount = await findByText('There is 1 new topic');
       fireEvent.click(newTopicCount);
-      await waitForElement(() => queryByText('Loading...'));
-      await waitForDomChange();
-      expect(queryByText('Loading...')).not.toBeInTheDocument();
-      expect(queryByText('There is 1 new topic')).toBeInTheDocument();
+      await findByText('Loading...');
+      await waitFor(() => {
+        expect(queryByText('Loading...')).not.toBeInTheDocument();
+        expect(queryByText('There is 1 new topic')).toBeInTheDocument();
+      });
       useRealIntervals();
     });
     it('displays modal when clicking delete on topic', async () => {
@@ -670,8 +646,8 @@ describe('TopicFeed', () => {
       apiCalls.loadNewTopicCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
-      const { queryByTestId, container } = setup();
-      await waitForDomChange();
+      const { queryByTestId, container, findByText } = setup();
+      await findByText('This is the latest topic');
       const deleteButton = container.querySelectorAll('button')[0];
       fireEvent.click(deleteButton);
 
@@ -685,8 +661,8 @@ describe('TopicFeed', () => {
       apiCalls.loadNewTopicCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
-      const { queryByTestId, container, queryByText } = setup();
-      await waitForDomChange();
+      const { queryByTestId, container, findByText, queryByText } = setup();
+      await findByText('This is the latest topic');
       const deleteButton = container.querySelectorAll('button')[0];
       fireEvent.click(deleteButton);
 
@@ -702,8 +678,8 @@ describe('TopicFeed', () => {
       apiCalls.loadNewTopicCount = jest
         .fn()
         .mockResolvedValue({ data: { count: 1 } });
-      const { container, queryByText } = setup();
-      await waitForDomChange();
+      const { container, queryByText, findByText } = setup();
+      await findByText('This is the latest topic');
       const deleteButton = container.querySelectorAll('button')[0];
       fireEvent.click(deleteButton);
 
@@ -721,8 +697,8 @@ describe('TopicFeed', () => {
         .mockResolvedValue({ data: { count: 1 } });
 
       apiCalls.deleteTopic = jest.fn().mockResolvedValue({});
-      const { container, queryByText } = setup();
-      await waitForDomChange();
+      const { container, queryByText, findByText } = setup();
+      await findByText('This is the latest topic');
       const deleteButton = container.querySelectorAll('button')[0];
       fireEvent.click(deleteButton);
       const deleteTopicButton = queryByText('Delete Topic');
@@ -738,15 +714,16 @@ describe('TopicFeed', () => {
         .mockResolvedValue({ data: { count: 1 } });
 
       apiCalls.deleteTopic = jest.fn().mockResolvedValue({});
-      const { container, queryByText, queryByTestId } = setup();
-      await waitForDomChange();
+      const { container, queryByText, queryByTestId, findByText } = setup();
+      await findByText('This is the latest topic');
       const deleteButton = container.querySelectorAll('button')[0];
       fireEvent.click(deleteButton);
       const deleteTopicButton = queryByText('Delete Topic');
       fireEvent.click(deleteTopicButton);
-      await waitForDomChange();
-      const modalRootDiv = queryByTestId('modal-root');
-      expect(modalRootDiv).not.toHaveClass('d-block show');
+      await waitFor(() => {
+        const modalRootDiv = queryByTestId('modal-root');
+        expect(modalRootDiv).not.toHaveClass('d-block show');
+      });
     });
     it('removes the deleted topic from document after successful deleteTopic api call', async () => {
       apiCalls.loadTopics = jest
@@ -757,15 +734,16 @@ describe('TopicFeed', () => {
         .mockResolvedValue({ data: { count: 1 } });
 
       apiCalls.deleteTopic = jest.fn().mockResolvedValue({});
-      const { container, queryByText } = setup();
-      await waitForDomChange();
+      const { container, queryByText, findByText } = setup();
+      await findByText('This is the latest topic');
       const deleteButton = container.querySelectorAll('button')[0];
       fireEvent.click(deleteButton);
       const deleteTopicButton = queryByText('Delete Topic');
       fireEvent.click(deleteTopicButton);
-      await waitForDomChange();
-      const deletedTopicContent = queryByText('This is the latest topic');
-      expect(deletedTopicContent).not.toBeInTheDocument();
+      await waitFor(() => {
+        const deletedTopicContent = queryByText('This is the latest topic');
+        expect(deletedTopicContent).not.toBeInTheDocument();
+      });
     });
     it('disables Modal Buttons when api call in progress', async () => {
       apiCalls.loadTopics = jest
@@ -782,8 +760,8 @@ describe('TopicFeed', () => {
           }, 300);
         });
       });
-      const { container, queryByText } = setup();
-      await waitForDomChange();
+      const { container, queryByText, findByText } = setup();
+      await findByText('This is the latest topic');
       const deleteButton = container.querySelectorAll('button')[0];
       fireEvent.click(deleteButton);
       const deleteTopicButton = queryByText('Delete Topic');
@@ -807,8 +785,8 @@ describe('TopicFeed', () => {
           }, 300);
         });
       });
-      const { container, queryByText } = setup();
-      await waitForDomChange();
+      const { container, queryByText, findByText } = setup();
+      await findByText('This is the latest topic');
       const deleteButton = container.querySelectorAll('button')[0];
       fireEvent.click(deleteButton);
       const deleteTopicButton = queryByText('Delete Topic');
@@ -831,15 +809,16 @@ describe('TopicFeed', () => {
           }, 300);
         });
       });
-      const { container, queryByText } = setup();
-      await waitForDomChange();
+      const { container, queryByText, findByText } = setup();
+      await findByText('This is the latest topic');
       const deleteButton = container.querySelectorAll('button')[0];
       fireEvent.click(deleteButton);
       const deleteTopicButton = queryByText('Delete Topic');
       fireEvent.click(deleteTopicButton);
-      await waitForDomChange();
-      const spinner = queryByText('Loading...');
-      expect(spinner).not.toBeInTheDocument();
+      await waitFor(() => {
+        const spinner = queryByText('Loading...');
+        expect(spinner).not.toBeInTheDocument();
+      });
     });
   });
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, waitForDomChange, waitForElement } from '@testing-library/react';
+import { render, fireEvent, waitForElementToBeRemoved } from '@testing-library/react';
 import { UserSignupPage } from './UserSignupPage';
 
 describe('UserSignupPage', () => {
@@ -179,9 +179,9 @@ describe('UserSignupPage', () => {
       const { queryByText } = setupForSubmit({ actions });
       fireEvent.click(button);
 
-      await waitForDomChange();
-
       const spinner = queryByText('Loading...');
+      await waitForElementToBeRemoved(spinner);
+
       expect(spinner).not.toBeInTheDocument();
     });
 
@@ -200,9 +200,8 @@ describe('UserSignupPage', () => {
       const { queryByText } = setupForSubmit({ actions });
       fireEvent.click(button);
 
-      await waitForDomChange();
-
       const spinner = queryByText('Loading...');
+      await waitForElementToBeRemoved(spinner);
       expect(spinner).not.toBeInTheDocument();
     });
 
@@ -218,10 +217,10 @@ describe('UserSignupPage', () => {
           }
         })
       };
-      const { queryByText } = setupForSubmit({ actions });
+      const { findByText  } = setupForSubmit({ actions });
       fireEvent.click(button);
 
-      const errorMessage = await waitForElement(() => queryByText('Cannot be null'));
+      const errorMessage = await findByText('Cannot be null');
       expect(errorMessage).toBeInTheDocument();
     });
     
@@ -268,13 +267,12 @@ describe('UserSignupPage', () => {
           }
         })
       };
-      const { queryByText } = setupForSubmit({ actions });
+      const { findByText } = setupForSubmit({ actions });
       fireEvent.click(button);
 
-      await waitForElement(() => queryByText('Cannot be null'));
+      const errorMessage = await findByText('Cannot be null');
       fireEvent.change(displayNameInput, changeEvent('name updated'));
 
-      const errorMessage = queryByText('Cannot be null');
       expect(errorMessage).not.toBeInTheDocument();
     });
 
@@ -290,13 +288,12 @@ describe('UserSignupPage', () => {
           }
         })
       };
-      const { queryByText } = setupForSubmit({ actions });
+      const { findByText } = setupForSubmit({ actions });
       fireEvent.click(button);
 
-      await waitForElement(() => queryByText('Username cannot be null'));
+      const errorMessage = await findByText('Username cannot be null');
       fireEvent.change(usernameInput, changeEvent('name updated'));
 
-      const errorMessage = queryByText('Username cannot be null');
       expect(errorMessage).not.toBeInTheDocument();
     });
     it('hides the validation error when user changes the content of password', async () => {
@@ -311,13 +308,12 @@ describe('UserSignupPage', () => {
           }
         })
       };
-      const { queryByText } = setupForSubmit({ actions });
+      const { findByText } = setupForSubmit({ actions });
       fireEvent.click(button);
 
-      await waitForElement(() => queryByText('Cannot be null'));
+      const errorMessage = await findByText('Cannot be null');
       fireEvent.change(passwordInput, changeEvent('updated-password'));
 
-      const errorMessage = queryByText('Cannot be null');
       expect(errorMessage).not.toBeInTheDocument();
     });
     
@@ -328,10 +324,10 @@ describe('UserSignupPage', () => {
       const history = {
         push: jest.fn()
       };
-      setupForSubmit({ actions, history });
+      const { queryByText } = setupForSubmit({ actions, history });
       fireEvent.click(button);
 
-      await waitForDomChange();
+      await waitForElementToBeRemoved(() => queryByText('Loading...'));
 
       expect(history.push).toHaveBeenCalledWith('/');
     });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, waitForDomChange } from '@testing-library/react';
+import { render, fireEvent, waitFor, waitForElementToBeRemoved, } from '@testing-library/react';
 import TopicSubmit from './TopicSubmit';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
@@ -109,8 +109,9 @@ describe('TopicSubmit', () => {
         apiCalls.postTopic = jest.fn().mockResolvedValue({});
         fireEvent.click(topicButton);
   
-        await waitForDomChange();
-        expect(queryByText('Post')).not.toBeInTheDocument();
+        await waitFor(() => {
+          expect(queryByText('Post')).not.toBeInTheDocument();
+        });
       });
       it('clear content after successful postTopic action', async () => {
         const { queryByText } = setupFocused();
@@ -121,8 +122,9 @@ describe('TopicSubmit', () => {
         apiCalls.postTopic = jest.fn().mockResolvedValue({});
         fireEvent.click(topicButton);
   
-        await waitForDomChange();
-        expect(queryByText('Test topic content')).not.toBeInTheDocument();
+        await waitFor(() => {
+          expect(queryByText('Test topic content')).not.toBeInTheDocument();
+        });
       });
       it('clears content after clicking cancel', () => {
         const { queryByText } = setupFocused();
@@ -210,9 +212,9 @@ describe('TopicSubmit', () => {
         apiCalls.postTopic = mockFunction;
         fireEvent.click(postButton);
   
-        await waitForDomChange();
-  
-        expect(queryByText('Post')).not.toBeDisabled();
+        await waitFor(() => {
+          expect(queryByText('Post')).not.toBeDisabled();
+        });
       });
       it('enables Cancel button when postTopic api call fails', async () => {
         const { queryByText } = setupFocused();
@@ -233,9 +235,9 @@ describe('TopicSubmit', () => {
         apiCalls.postTopic = mockFunction;
         fireEvent.click(postButton);
   
-        await waitForDomChange();
-  
-        expect(queryByText('Cancel')).not.toBeDisabled();
+        await waitFor(() => {
+          expect(queryByText('Cancel')).not.toBeDisabled();
+        });
       });
       it('enables Post button after successful postTopic action', async () => {
         const { queryByText } = setupFocused();
@@ -246,9 +248,11 @@ describe('TopicSubmit', () => {
         apiCalls.postTopic = jest.fn().mockResolvedValue({});
         fireEvent.click(postButton);
   
-        await waitForDomChange();
+        await waitForElementToBeRemoved(postButton);
         fireEvent.focus(textArea);
-        expect(queryByText('Post')).not.toBeDisabled();
+        await waitFor(() => {
+          expect(queryByText('Post')).not.toBeDisabled();
+        });
       });
       it('displays validation error for content', async () => {
         const { queryByText } = setupFocused();
@@ -269,14 +273,14 @@ describe('TopicSubmit', () => {
         apiCalls.postTopic = mockFunction;
         fireEvent.click(topicButton);
   
-        await waitForDomChange();
-  
-        expect(
-          queryByText('It must have minimum 10 and maximum 5000 characters')
-        ).toBeInTheDocument();
+        await waitFor(() => {
+          expect(
+            queryByText('It must have minimum 10 and maximum 5000 characters')
+          ).toBeInTheDocument();
+        });
       });
       it('clears validation error after clicking cancel', async () => {
-        const { queryByText } = setupFocused();
+        const { queryByText, findByText } = setupFocused();
         fireEvent.change(textArea, { target: { value: 'Test topic content' } });
   
         const topicButton = queryByText('Post');
@@ -294,15 +298,16 @@ describe('TopicSubmit', () => {
         apiCalls.postTopic = mockFunction;
         fireEvent.click(topicButton);
   
-        await waitForDomChange();
-        fireEvent.click(queryByText('Cancel'));
+        const error = await findByText(
+          'It must have minimum 10 and maximum 5000 characters'
+        );
   
-        expect(
-          queryByText('It must have minimum 10 and maximum 5000 characters')
-        ).not.toBeInTheDocument();
+        fireEvent.click(queryByText('Cancel'));
+
+        expect(error).not.toBeInTheDocument();
       });
       it('clears validation error after content is changed', async () => {
-        const { queryByText } = setupFocused();
+        const { queryByText, findByText } = setupFocused();
         fireEvent.change(textArea, { target: { value: 'Test topic content' } });
   
         const topicButton = queryByText('Post');
@@ -319,15 +324,15 @@ describe('TopicSubmit', () => {
   
         apiCalls.postTopic = mockFunction;
         fireEvent.click(topicButton);
+        const error = await findByText(
+          'It must have minimum 10 and maximum 5000 characters'
+        );
   
-        await waitForDomChange();
         fireEvent.change(textArea, {
           target: { value: 'Test topic content updated' }
         });
   
-        expect(
-          queryByText('It must have minimum 10 and maximum 5000 characters')
-        ).not.toBeInTheDocument();
+        expect(error).not.toBeInTheDocument();
       });
       it('displays file attachment input when text area focused', () => {
         const { container } = setup();
@@ -356,11 +361,11 @@ describe('TopicSubmit', () => {
         });
         fireEvent.change(uploadInput, { target: { files: [file] } });
   
-        await waitForDomChange();
-  
-        const images = container.querySelectorAll('img');
-        const attachmentImage = images[1];
-        expect(attachmentImage.src).toContain('data:image/png;base64');
+        await waitFor(() => {
+          const images = container.querySelectorAll('img');
+          const attachmentImage = images[1];
+          expect(attachmentImage.src).toContain('data:image/png;base64');
+        });
       });
       it('removes selected image after clicking cancel', async () => {
         apiCalls.postTopicFile = jest.fn().mockResolvedValue({
@@ -379,13 +384,18 @@ describe('TopicSubmit', () => {
         });
         fireEvent.change(uploadInput, { target: { files: [file] } });
   
-        await waitForDomChange();
+        await waitFor(() => {
+          const images = container.querySelectorAll('img');
+          expect(images.length).toBe(2);
+        });
   
         fireEvent.click(queryByText('Cancel'));
         fireEvent.focus(textArea);
   
-        const images = container.querySelectorAll('img');
-        expect(images.length).toBe(1);
+        await waitFor(() => {
+          const images = container.querySelectorAll('img');
+          expect(images.length).toBe(1);
+        });
       });
       it('calls postTopicFile when file selected', async () => {
         apiCalls.postTopicFile = jest.fn().mockResolvedValue({
@@ -405,7 +415,10 @@ describe('TopicSubmit', () => {
         });
         fireEvent.change(uploadInput, { target: { files: [file] } });
   
-        await waitForDomChange();
+        await waitFor(() => {
+          const images = container.querySelectorAll('img');
+          expect(images.length).toBe(2);
+        });
         expect(apiCalls.postTopicFile).toHaveBeenCalledTimes(1);
       });
       it('calls postTopicFile with selected file', async () => {
@@ -426,7 +439,10 @@ describe('TopicSubmit', () => {
         });
         fireEvent.change(uploadInput, { target: { files: [file] } });
   
-        await waitForDomChange();
+        await waitFor(() => {
+          const images = container.querySelectorAll('img');
+          expect(images.length).toBe(2);
+        });
   
         const body = apiCalls.postTopicFile.mock.calls[0][0];
   
@@ -463,7 +479,10 @@ describe('TopicSubmit', () => {
         });
         fireEvent.change(uploadInput, { target: { files: [file] } });
   
-        await waitForDomChange();
+        await waitFor(() => {
+          const images = container.querySelectorAll('img');
+          expect(images.length).toBe(2);
+        });
   
         const postButton = queryByText('Post');
   
@@ -496,18 +515,21 @@ describe('TopicSubmit', () => {
         });
         fireEvent.change(uploadInput, { target: { files: [file] } });
   
-        await waitForDomChange();
+        await waitFor(() => {
+          const images = container.querySelectorAll('img');
+          expect(images.length).toBe(2);
+        });
   
         const postButton = queryByText('Post');
   
         apiCalls.postTopic = jest.fn().mockResolvedValue({});
         fireEvent.click(postButton);
-  
-        await waitForDomChange();
-  
+
         fireEvent.focus(textArea);
-        const images = container.querySelectorAll('img');
-        expect(images.length).toBe(1);
+        await waitFor(() => {
+          const images = container.querySelectorAll('img');
+          expect(images.length).toBe(1);
+        });
       });
       it('calls postTopic without file attachment after cancelling previous file selection', async () => {
         apiCalls.postTopicFile = jest.fn().mockResolvedValue({
@@ -526,8 +548,11 @@ describe('TopicSubmit', () => {
           type: 'image/png'
         });
         fireEvent.change(uploadInput, { target: { files: [file] } });
-  
-        await waitForDomChange();
+        
+        await waitFor(() => {
+          const images = container.querySelectorAll('img');
+          expect(images.length).toBe(2);
+        });
   
         fireEvent.click(queryByText('Cancel'));
         fireEvent.focus(textArea);
