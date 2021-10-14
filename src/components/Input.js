@@ -14,6 +14,7 @@ const Input = (props) => {
     <div>
       {props.label && <label>{props.label}</label>} {/* if props has label is true then show label element */}
       <input
+        name={props.name}
         className={inputClassName}
         type={props.type || 'text'}
         placeholder={props.placeholder}

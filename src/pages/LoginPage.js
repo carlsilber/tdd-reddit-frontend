@@ -50,9 +50,7 @@ export const LoginPage = (props) => {
               label="Username"
               placeholder="Your username"
               value={username}
-              onChange={(event) => {
-            setUsername(event.target.value);
-          }}
+              onChange={(event) => setUsername(event.target.value)}
             />
           </div>
           <div className="col-12 mb-3">
