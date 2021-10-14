@@ -481,7 +481,7 @@ describe('TopicFeed', () => {
         .fn()
         .mockResolvedValue(mockSuccessGetTopicsLastOfMultiPage);
       const { findByText } = setup();
-      console.log(findByText);
+
       const loadMore = await findByText('Load More');
       fireEvent.click(loadMore);
 
