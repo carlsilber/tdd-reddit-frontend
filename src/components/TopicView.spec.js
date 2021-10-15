@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import TopicView from './TopicView';
 import { MemoryRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
@@ -68,8 +68,8 @@ const topicWithPdfAttachment = {
 const setup = (topic = topicWithAttachment, state = loggedInStateUser1) => {
   const oneMinute = 60 * 1000;
   const date = new Date(new Date() - oneMinute);
-topic.date = date;
-const store = createStore(authReducer, state);
+  topic.date = date;
+  const store = createStore(authReducer, state);
   return render(
     <Provider store={store}>
       <MemoryRouter>
@@ -128,6 +128,18 @@ describe('TopicView', () => {
     it('does not display delete button when topic is not owned by logged in user', () => {
       const { container } = setup(topicWithoutAttachment, loggedInStateUser2);
       expect(container.querySelector('button')).not.toBeInTheDocument();
+    });
+    it('does not show the dropdown menu when not clicked', () => {
+      const { queryByTestId } = setup();
+      const dropDownMenu = queryByTestId('topic-action-dropdown');
+      expect(dropDownMenu).not.toHaveClass('show');
+    });
+    it('shows the dropdown menu after clicking the indicator', () => {
+      const { queryByTestId } = setup();
+      const indicator = queryByTestId('topic-actions');
+      fireEvent.click(indicator);
+      const dropDownMenu = queryByTestId('topic-action-dropdown');
+      expect(dropDownMenu).toHaveClass('show');
     });
   });
 });
