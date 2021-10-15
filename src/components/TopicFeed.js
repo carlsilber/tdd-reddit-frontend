@@ -1,160 +1,170 @@
-import React, { Component } from 'react'
+import React, { useState, useEffect } from 'react'
 import * as apiCalls from '../api/apiCalls';
 import Spinner from './Spinner';
 import TopicView from './TopicView';
 import Modal from './Modal';
 
-class TopicFeed extends Component {
-    state = {
-        page: {
-          content: []
-        },
-        isLoadingTopics: false, 
-        newTopicCount: 0,
-        isLoadingOldTopics: false,
-        isLoadingNewTopics: false,
-        isDeletingTopic: false
-      };
-    
-componentDidMount() {
-    this.setState({ isLoadingTopics: true });
-    apiCalls.loadTopics(this.props.user).then((response) => {
-      this.setState({ page: response.data, isLoadingTopics: false }, () => {
-        this.counter = setInterval(this.checkCount, 3000);
+const TopicFeed = (props) => {
+  const [page, setPage] = useState({ content: [] });
+  const [isLoadingTopics, setLoadingTopics] = useState(false);
+  const [isLoadingOldTopics, setLoadingOldTopics] = useState(false);
+  const [isLoadingNewTopics, setLoadingNewTopics] = useState(false);
+  const [isDeletingTopic, setDeletingTopic] = useState(false);
+  const [newTopicCount, setNewTopicCount] = useState(0);
+  const [topicToBeDeleted, setTopicToBeDeleted] = useState();
+
+  useEffect(() => {
+    const loadTopics = () => {
+      setLoadingTopics(true);
+      apiCalls.loadTopics(props.user).then((response) => {
+        setLoadingTopics(false);
+        setPage(response.data);
       });
-    });
-  }
+    };
+    loadTopics();
+  }, [props.user]);
 
-componentWillUnmount() {
-  clearInterval(this.counter);
-}
-
-checkCount = () => {
-  const topics = this.state.page.content;
-  let topTopicId = 0;
-  if (topics.length > 0) {
-    topTopicId = topics[0].id;
-  }
-  apiCalls.loadNewTopicCount(topTopicId, this.props.user).then((response) => {
-    this.setState({ newTopicCount: response.data.count });
-  });
-};
-
-
-onClickLoadMore = () => {
-  if (this.state.isLoadingOldTopics) {
-    return;
-  }
-  const topics = this.state.page.content;
-  if (topics.length === 0) {
-    return;
-  }
-  const topicAtBottom = topics[topics.length - 1];
-  this.setState({ isLoadingOldTopics: true });
-  apiCalls
-    .loadOldTopics(topicAtBottom.id, this.props.user)
-    .then((response) => {
-      const page = { ...this.state.page };
-      page.content = [...page.content, ...response.data.content];
-      page.last = response.data.last;
-      this.setState({ page, isLoadingOldTopics: false });
-    })
-    .catch((error) => {
-      this.setState({ isLoadingOldTopics: false });
-    });
-};
-
-onClickLoadNew = () => {
-  if (this.state.isLoadingNewTopics) {
-    return;
-  }
-  const topics = this.state.page.content;
-  let topTopicId = 0;
-  if (topics.length > 0) {
-    topTopicId = topics[0].id;
-  }
-  this.setState({ isLoadingNewTopics: true });
-  apiCalls
-    .loadNewTopics(topTopicId, this.props.user)
-    .then((response) => {
-      const page = { ...this.state.page };
-      page.content = [...response.data, ...page.content];
-      this.setState({ page, newTopicCount: 0, isLoadingNewTopics: false });
-    })
-    .catch((error) => {
-      this.setState({ isLoadingNewTopics: false });
-    });
-};
-
-onClickDeleteTopic = (topic) => {
-  this.setState({ topicToBeDeleted: topic });
-};
-
-onClickModalCancel = () => {
-  this.setState({ topicToBeDeleted: undefined });
-};
-
-onClickModalOk = () => {
-  this.setState({ isDeletingTopic: true });
-  apiCalls.deleteTopic(this.state.topicToBeDeleted.id).then((response) => {
-    const page = { ...this.state.page };
-    page.content = page.content.filter(
-      (topic) => topic.id !== this.state.topicToBeDeleted.id
-    );
-    this.setState({
-      topicToBeDeleted: undefined,
-      page,
-      isDeletingTopic: false
-    });
-  });
-};
+  useEffect(() => {
+    const checkCount = () => {
+      const topics = page.content;
+      let topTopicId = 0;
+      if (topics.length > 0) {
+        topTopicId = topics[0].id;
+      }
+      apiCalls.loadNewTopicCount(topTopicId, props.user).then((response) => {
+        setNewTopicCount(response.data.count);
+      });
+    };
+    const counter = setInterval(checkCount, 3000);
+    return function cleanup() {
+      clearInterval(counter);
+    };
+  }, [props.user, page.content]);
 
 
-
-    render() {
-        if (this.state.isLoadingTopics) {
-            return <Spinner />;
-          }
-          if (this.state.page.content.length === 0 && this.state.newTopicCount === 0) {
-            return (
-              <div className="card card-header text-center">There are no topics</div>
-            );
-          }
-          const newTopicCountMessage =
-          this.state.newTopicCount === 1
-            ? 'There is 1 new topic'
-            : `There are ${this.state.newTopicCount} new topics`;     
-        return (
-            <div>
-                {this.state.newTopicCount > 0 && (
-                  <div className="card card-header text-center" 
-                       onClick={this.onClickLoadNew}
-                       style={{cursor: this.state.isLoadingNewTopics ? 'not-allowed' : 'pointer'}} 
-                  >
-                {this.state.isLoadingNewTopics ? <Spinner /> : newTopicCountMessage}
-          </div>
-        )}
-            {this.state.page.content.map((topic) => {
-              return <TopicView key={topic.id} topic={topic} onClickDelete={() => this.onClickDeleteTopic(topic)}/>;
-            })}
-              {this.state.page.last === false && (
-                <div className="card card-header text-center" 
-                     onClick={!this.state.isLoadingOldTopics && this.onClickLoadMore}
-                     style={{cursor: this.state.isLoadingOldTopics ? 'not-allowed' : 'pointer'}}>{this.state.isLoadingOldTopics ? <Spinner /> : 'Load More'}
-                </div>
-            )}
-            <Modal
-              visible={this.state.topicToBeDeleted && true}
-              onClickCancel={this.onClickModalCancel}
-              body={ this.state.topicToBeDeleted && `Are you sure to delete '${this.state.topicToBeDeleted.content}'?` }
-              title="Delete!"
-              okButton="Delete Topic"
-              onClickOk={this.onClickModalOk}
-              pendingApiCall={this.state.isDeletingTopic}
-            />
-          </div>
-        );
+  const onClickLoadMore = () => {
+    if (isLoadingOldTopics) {
+      return;
     }
-}
+    const topics = page.content;
+    if (topics.length === 0) {
+      return;
+    }
+    const topicAtBottom = topics[topics.length - 1];
+    setLoadingOldTopics(true);
+    apiCalls
+      .loadOldTopics(topicAtBottom.id, props.user)
+      .then((response) => {
+        setPage((previousPage) => ({
+          ...previousPage,
+          last: response.data.last,
+          content: [...previousPage.content, ...response.data.content],
+        }));
+        setLoadingOldTopics(false);
+      })
+      .catch((error) => {
+        setLoadingOldTopics(false);
+      });
+  };
+
+  const onClickLoadNew = () => {
+    if (isLoadingNewTopics) {
+      return;
+    }
+    const topics = page.content;
+    let topTopicId = 0;
+    if (topics.length > 0) {
+      topTopicId = topics[0].id;
+    }
+    setLoadingNewTopics(true);
+    apiCalls
+      .loadNewTopics(topTopicId, props.user)
+      .then((response) => {
+        setPage((previousPage) => ({
+          ...previousPage,
+          content: [...response.data, ...previousPage.content],
+        }));
+        setLoadingNewTopics(false);
+        setNewTopicCount(0);
+      })
+      .catch((error) => {
+        setLoadingNewTopics(false);
+      });
+  };
+
+  const onClickModalOk = () => {
+    setDeletingTopic(true);
+    apiCalls.deleteTopic(topicToBeDeleted.id).then((response) => {
+      setPage((previousPage) => ({
+        ...previousPage,
+        content: previousPage.content.filter(
+          (topic) => topic.id !== topicToBeDeleted.id
+        ),
+      }));
+      setDeletingTopic(false);
+      setTopicToBeDeleted();
+    });
+  };
+
+  if (isLoadingTopics) {
+    return <Spinner />;
+  }
+  if (page.content.length === 0 && newTopicCount === 0) {
+    return (
+      <div className="card card-header text-center">There are no topics</div>
+    );
+  }
+  const newTopicCountMessage =
+    newTopicCount === 1
+      ? 'There is 1 new topic'
+      : `There are ${newTopicCount} new topics`;
+  return (
+    <div>
+      {newTopicCount > 0 && (
+        <div
+          className="card card-header text-center"
+          onClick={onClickLoadNew}
+          style={{
+            cursor: isLoadingNewTopics ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {isLoadingNewTopics ? <Spinner /> : newTopicCountMessage}
+        </div>
+      )}
+      {page.content.map((topic) => {
+        return (
+          <TopicView
+            key={topic.id}
+            topic={topic}
+            onClickDelete={() => setTopicToBeDeleted(topic)}
+          />
+        );
+      })}
+      {page.last === false && (
+        <div
+          className="card card-header text-center"
+          onClick={onClickLoadMore}
+          style={{
+            cursor: isLoadingOldTopics ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {isLoadingOldTopics ? <Spinner /> : 'Load More'}
+        </div>
+      )}
+      <Modal
+        visible={topicToBeDeleted && true}
+        onClickCancel={() => setTopicToBeDeleted()}
+        body={
+          topicToBeDeleted &&
+          `Are you sure to delete '${topicToBeDeleted.content}'?`
+        }
+        title="Delete!"
+        okButton="Delete Topic"
+        onClickOk={onClickModalOk}
+        pendingApiCall={isDeletingTopic}
+      />
+    </div>
+  );
+};
 
 export default TopicFeed;
